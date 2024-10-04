@@ -1,8 +1,9 @@
 package co.profiland.co.model;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
-public class Comment {
+public class Comment implements Serializable{
     private Seller author;
     private String text;
     private LocalDateTime dateComment;

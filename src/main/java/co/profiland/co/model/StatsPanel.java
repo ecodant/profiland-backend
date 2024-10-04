@@ -2,8 +2,9 @@ package co.profiland.co.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.io.Serializable;
 
-public class StatsPanel {
+public class StatsPanel implements Serializable {
     private ArrayList<Stadistic> stats;
 
     public StatsPanel(){

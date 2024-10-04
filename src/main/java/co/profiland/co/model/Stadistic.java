@@ -1,6 +1,8 @@
 package co.profiland.co.model;
 
-public class Stadistic {
+import java.io.Serializable;
+
+public class Stadistic implements Serializable {
     private String type;
     private Integer value;
 

@@ -1,33 +1,69 @@
 package co.profiland.co.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import co.profiland.co.model.Seller;
 import co.profiland.co.service.SellerService;
+import java.io.IOException;
+import java.util.List;
 
 @RestController
-@RequestMapping("/profiland/users") 
+@RequestMapping("/profiland/sellers") 
 public class SellerController {
 
-    @Autowired
-    private SellerService sellerService;
+    private final SellerService sellerService;
 
-    @GetMapping("/json-from-xml")
-    public ResponseEntity<String> getAllSellersInJsonFromXml() {
-        return ResponseEntity.ok(sellerService.getAllSellersInJsonFromXml());
+    public SellerController(SellerService sellerService) {
+        this.sellerService = sellerService;
     }
 
-    @GetMapping("/json-from-dat")
-    public ResponseEntity<String> getAllSellersInJsonFromDat() {
-        return ResponseEntity.ok(sellerService.getAllSellersInJsonFromDat());
-    }
-
-    @PostMapping("/")
+    @PostMapping("/save")
     public ResponseEntity<Seller> saveSeller(@RequestBody Seller seller,
-                                             @RequestParam(name = "format", defaultValue = "xml") String format) {
-        boolean saveAsXml = format.equalsIgnoreCase("xml");
-        return ResponseEntity.ok(sellerService.saveSeller(seller, saveAsXml));
+                                             @RequestParam(name = "format", required = false, defaultValue = "dat") String format) {
+        try {
+            Seller savedSeller = sellerService.saveSeller(seller, format);
+            return ResponseEntity.ok(savedSeller);
+        } catch (IOException | ClassNotFoundException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/")
+    public ResponseEntity<String> getAllSellers() {
+        try {
+            List<Seller> sellers = sellerService.getAllSellersMerged();
+            return ResponseEntity.ok(sellerService.convertToJson(sellers));
+        } catch (IOException | ClassNotFoundException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/find-by-id")
+    public ResponseEntity<Seller> getSellerById(@RequestParam("id") String id) {
+        try {
+            Seller seller = sellerService.findSellerById(id);
+            if (seller != null) {
+                return ResponseEntity.ok(seller);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/find-by-name")
+    public ResponseEntity<List<Seller>> getSellersByName(@RequestParam("name") String name) {
+        try {
+            List<Seller> sellers = sellerService.findSellerByName(name);
+            if (sellers.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            } else {
+                return ResponseEntity.ok(sellers);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

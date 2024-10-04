@@ -1,9 +1,10 @@
 package co.profiland.co.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-public class Product {
+public class Product implements Serializable {
     private String name;
     private String code;
     private String image;

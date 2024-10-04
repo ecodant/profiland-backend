@@ -1,8 +1,9 @@
 package co.profiland.co.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Message {
+public class Message implements Serializable {
     private Seller targetSeller;
     private String content;
     private LocalDateTime dateSending;

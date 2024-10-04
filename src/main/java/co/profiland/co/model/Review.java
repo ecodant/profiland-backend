@@ -1,6 +1,7 @@
 package co.profiland.co.model;
 
-public class Review {
+import java.io.Serializable;
+public class Review implements Serializable{
     private Seller author;
     private String comment;
     private Integer calification;

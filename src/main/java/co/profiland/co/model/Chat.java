@@ -1,8 +1,9 @@
 
 package co.profiland.co.model;
 import java.util.ArrayList;
+import java.io.Serializable;
 
-public class Chat {
+public class Chat implements Serializable {
     private ArrayList<Seller> members;
     private ArrayList<Message> messages;
 

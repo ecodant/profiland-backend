@@ -12,7 +12,9 @@ target/
 .settings
 .springBeans
 .sts4-cache
-
+### Serialized Files for Test
+*.dat
+*.xml
 ### IntelliJ IDEA ###
 .idea
 *.iws

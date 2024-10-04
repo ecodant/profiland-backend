@@ -1,16 +1,17 @@
 package co.profiland.co.model;
 
 import java.util.ArrayList;
+import java.io.Serializable;
 
-public class Wall {
-    private ArrayList<Product> publications;
+public class Wall implements Serializable {
+    private ArrayList<Product> posts;
 
     public Wall(){
-        this.publications = new ArrayList<Product>();
+        this.posts = new ArrayList<Product>();
     }
 
-    public Wall(ArrayList<Product> publications){
-        this.publications = publications;
+    public Wall(ArrayList<Product> posts){
+        this.posts = posts;
     }
 
     public void showWall(){}
@@ -20,10 +21,10 @@ public class Wall {
     public void showContacts(){}
 
     public ArrayList<Product> getPublications() {
-        return publications;
+        return posts;
     }
 
-    public void setPublications(ArrayList<Product> publications) {
-        this.publications = publications;
+    public void setPublications(ArrayList<Product> posts) {
+        this.posts = posts;
     }
 }
