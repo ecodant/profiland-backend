@@ -1,4 +1,4 @@
-package mainClasses;
+package co.profiland.co.model;
 
 public class Review {
     private Seller author;

@@ -1,5 +1,5 @@
-package mainClasses;
 
+package co.profiland.co.model;
 import java.util.ArrayList;
 
 public class Chat {
