@@ -11,13 +11,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/profiland/sellers") 
 public class SellerController {
-
     private final SellerService sellerService;
 
     public SellerController(SellerService sellerService) {
         this.sellerService = sellerService;
     }
 
+    // Create: Save a new Seller
     @PostMapping("/save")
     public ResponseEntity<Seller> saveSeller(@RequestBody Seller seller,
                                              @RequestParam(name = "format", required = false, defaultValue = "dat") String format) {
@@ -29,6 +29,7 @@ public class SellerController {
         }
     }
 
+    // Read: Get all sellers
     @GetMapping("/")
     public ResponseEntity<String> getAllSellers() {
         try {
@@ -43,11 +44,7 @@ public class SellerController {
     public ResponseEntity<Seller> getSellerById(@RequestParam("id") String id) {
         try {
             Seller seller = sellerService.findSellerById(id);
-            if (seller != null) {
-                return ResponseEntity.ok(seller);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
+            return seller != null ? ResponseEntity.ok(seller) : ResponseEntity.notFound().build();
         } catch (IOException | ClassNotFoundException e) {
             return ResponseEntity.internalServerError().build();
         }
@@ -57,11 +54,30 @@ public class SellerController {
     public ResponseEntity<List<Seller>> getSellersByName(@RequestParam("name") String name) {
         try {
             List<Seller> sellers = sellerService.findSellerByName(name);
-            if (sellers.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            } else {
-                return ResponseEntity.ok(sellers);
-            }
+            return sellers.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(sellers);
+        } catch (IOException | ClassNotFoundException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Seller> updateSeller(@PathVariable String id,
+                                               @RequestBody Seller seller,
+                                               @RequestParam(name = "format", required = false, defaultValue = "dat") String format) {
+        try {
+            Seller updatedSeller = sellerService.updateSeller(id, seller, format);
+            return updatedSeller != null ? ResponseEntity.ok(updatedSeller) : ResponseEntity.notFound().build();
+        } catch (IOException | ClassNotFoundException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // Delete: Delete a Seller by ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteSeller(@PathVariable String id) {
+        try {
+            boolean isDeleted = sellerService.deleteSeller(id);
+            return isDeleted ? ResponseEntity.ok("Seller deleted successfully ;D") : ResponseEntity.notFound().build();
         } catch (IOException | ClassNotFoundException e) {
             return ResponseEntity.internalServerError().build();
         }
