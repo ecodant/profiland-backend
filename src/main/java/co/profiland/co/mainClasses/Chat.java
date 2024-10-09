@@ -1,14 +1,11 @@
+package co.profiland.co.mainClasses;
 
-package co.profiland.co.model;
 import java.util.ArrayList;
 
 import lombok.Data;
 
-import java.io.Serializable;
-
 @Data
-public class Chat implements Serializable {
-    private String id;
+public class Chat {
     private ArrayList<Seller> members;
     private ArrayList<Message> messages;
 

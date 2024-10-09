@@ -2,7 +2,11 @@ package co.profiland.co.model;
 
 import java.io.Serializable;
 
+import lombok.Data;
+
+@Data
 public class Stadistic implements Serializable {
+    private String id;
     private String type;
     private Integer value;
 
@@ -19,19 +23,4 @@ public class Stadistic implements Serializable {
 
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public Integer getValue() {
-        return value;
-    }
-
-    public void setValue(Integer value) {
-        this.value = value;
-    }
 }

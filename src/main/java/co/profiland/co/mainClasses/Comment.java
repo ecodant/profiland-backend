@@ -1,14 +1,11 @@
-package co.profiland.co.model;
+package co.profiland.co.mainClasses;
 
 import java.time.LocalDateTime;
 
 import lombok.Data;
 
-import java.io.Serializable;
-
 @Data
-public class Comment implements Serializable{
-    private String id;
+public class Comment {
     private Seller author;
     private String text;
     private LocalDateTime dateComment;
@@ -17,12 +14,9 @@ public class Comment implements Serializable{
 
     }
 
-    public Comment(String id, Seller author, String text, LocalDateTime dateComment){
-
-        this.id = id;
+    public Comment(Seller author, String text, LocalDateTime dateComment){
         this.author = author;
         this.text = text;
         this.dateComment = dateComment;
     }
-
 }

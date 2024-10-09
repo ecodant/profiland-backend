@@ -1,13 +1,11 @@
-package co.profiland.co.model;
+package co.profiland.co.mainClasses;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.Data;
 
 @Data
-public class Message implements Serializable {
-    private String id;
+public class Message {
     private Seller targetSeller;
     private String content;
     private LocalDateTime dateSending;

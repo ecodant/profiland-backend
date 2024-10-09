@@ -1,9 +1,14 @@
 package co.profiland.co.model;
 
 import java.util.ArrayList;
+
+import lombok.Data;
+
 import java.io.Serializable;
 
+@Data
 public class Wall implements Serializable {
+    private String id;
     private ArrayList<Product> posts;
 
     public Wall(){
@@ -19,12 +24,4 @@ public class Wall implements Serializable {
     public void addProduct(){}
 
     public void showContacts(){}
-
-    public ArrayList<Product> getPublications() {
-        return posts;
-    }
-
-    public void setPublications(ArrayList<Product> posts) {
-        this.posts = posts;
-    }
 }

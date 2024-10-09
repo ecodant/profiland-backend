@@ -1,15 +1,12 @@
-package co.profiland.co.model;
+package co.profiland.co.mainClasses;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import lombok.Data;
 
-import java.io.Serializable;
-
 @Data
-public class StatsPanel implements Serializable {
-    private String id;
+public class StatsPanel {
     private ArrayList<Stadistic> stats;
 
     public StatsPanel(){
