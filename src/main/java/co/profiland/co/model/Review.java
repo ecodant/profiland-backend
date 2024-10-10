@@ -6,7 +6,8 @@ import lombok.Data;
 @Data
 public class Review implements Serializable{
     private String id;
-    private Seller author;
+    private String authorRef;
+    private String ownerRef;
     private String comment;
     private Integer calification;
 
@@ -14,8 +15,9 @@ public class Review implements Serializable{
 
     }
 
-    public Review(Seller author, String comment, Integer calification){
-        this.author = author;
+    public Review(String author, String ownerRef, String comment, Integer calification){
+        this.authorRef = author;
+        this.ownerRef = ownerRef;
         this.comment = comment;
         this.calification = calification;
     }

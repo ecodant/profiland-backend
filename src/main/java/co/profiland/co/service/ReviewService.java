@@ -1,153 +1,107 @@
 package co.profiland.co.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-import java.io.File;
 import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.*;
 
 import co.profiland.co.model.Review;
 import co.profiland.co.utilities.Persistence;
 import lombok.extern.slf4j.Slf4j;
-import java.util.stream.Collectors;
+
 
 @Service
 @Slf4j
 public class ReviewService {
-    
+
     private static final String XML_PATH = "src/main/resources/reviews/reviews.xml";
-    private static final String DAT_PATH = "src/main/resources/reviews/reviews.dat";
-
     private final Persistence persistence = Persistence.getInstance();
-    //private final ObjectMapper jsonMapper = new ObjectMapper(); 
 
-    public Review saveReview(Review review, String format) throws IOException, ClassNotFoundException {
-        List<Review> reviews;
-        //This part is for the bug that both files needs to existe to save data otherwise didn't work
-        String filePath = "xml".equalsIgnoreCase(format) ? XML_PATH : DAT_PATH;
+    public ReviewService() {
+        persistence.initializeXmlFile(XML_PATH, new ArrayList<Review>());
+    }
 
-        File file = new File(filePath);
-        if (!file.exists()) {
-            reviews = new ArrayList<>();
-            if ("xml".equalsIgnoreCase(format)) {
-                persistence.serializeObjectXML(XML_PATH, reviews);
-            } else {
-                persistence.serializeObject(DAT_PATH, reviews);
-            }
-        } else {
-            // If the file exists, read the existing sellers
-            reviews = getAllReviews(format);
+    public Review saveReview(Review review) throws IOException, ClassNotFoundException {
+        List<Review> reviews = getAllReviews();
+    
+        if (review.getId() == null || review.getId().isEmpty()) {
+            review.setId(UUID.randomUUID().toString());
         }
 
         reviews.add(review);
+        persistence.serializeObjectXML(XML_PATH, reviews);
 
-        if ("xml".equalsIgnoreCase(format)) {
-            persistence.serializeObjectXML(XML_PATH, reviews);
-        } else {
-            persistence.serializeObject(DAT_PATH, reviews);
-        }
-
+        log.info("Saved Review with ID: {}", review.getId());
         return review;
     }
 
-    // Retrieve all sellers by merging XML and DAT files 
-    public List<Review> getAllReviewsMerged() throws IOException, ClassNotFoundException {
-        List<Review> xmlReviews = getAllReviews("xml");
-        List<Review> datReviews = getAllReviews("dat");
-
-        // This Set eliminates duplicates based on the seller ID
-        Set<String> seenIds = new HashSet<>();
-        List<Review> mergedReviews = new ArrayList<>();
-
-        for (Review review : xmlReviews) {
-            if (seenIds.add(review.getId())) {
-                mergedReviews.add(review);
+    @SuppressWarnings("unchecked")
+    public List<Review> getAllReviews() throws IOException, ClassNotFoundException {
+        try {
+            Object deserializedData = persistence.deserializeObjectXML(XML_PATH);
+            if (deserializedData instanceof List<?>) {
+                return (List<Review>) deserializedData;
             }
+        } catch (ClassNotFoundException e) {
+            log.error("Failed to deserialize reviews", e);
         }
-
-        for (Review review : datReviews) {
-            if (seenIds.add(review.getId())) {
-                mergedReviews.add(review);
-            }
-        }
-
-        return mergedReviews;
+        return new ArrayList<>();
     }
-    public Review updateReview(String id, Review updatedReview, String format) throws IOException, ClassNotFoundException {
-        List<Review> reviews = getAllReviews(format);
+
+    public Review updateReview(String id, Review updatedReview) throws IOException, ClassNotFoundException {
+        List<Review> reviews = getAllReviews();
 
         for (int i = 0; i < reviews.size(); i++) {
             if (reviews.get(i).getId().equals(id)) {
-                // Preserve the same ID and update other fields
                 updatedReview.setId(id);
-                reviews.set(i, updatedReview);  // Replace existing Review with updated data
-                serializeReviews(format, reviews);
+                reviews.set(i, updatedReview);
+                persistence.serializeObjectXML(XML_PATH, reviews);
+                log.info("Updated review with ID: {}", id);
                 return updatedReview;
             }
         }
-
-        return null;  
+        log.warn("Review not found for bro. ID: {}", id);
+        return null;
     }
 
-    // 4. Delete: Remove a seller by ID
     public boolean deleteReview(String id) throws IOException, ClassNotFoundException {
-        List<Review> reviews = getAllReviewsMerged();
-        boolean removed = reviews.removeIf(Review -> Review.getId().equals(id));
-        //This was cause an error because if a seller it was delete from one file but not from other
-        // So you Edwin set up to save in both format, so check out in the future
+        List<Review> reviews = getAllReviews();
+        boolean removed = reviews.removeIf(review -> review.getId().equals(id));
         if (removed) {
-            serializeReviews(id, reviews);
-            serializeReviews("xml", reviews);
+            persistence.serializeObjectXML(XML_PATH, reviews);
+            log.info("Deleted review with ID: {}", id);
+        } else {
+            log.warn("Review not found for deletion. ID: {}", id);
         }
-
         return removed;
     }
-    // Hlper method for try out if the saving format is working okas
-    @SuppressWarnings("unchecked")
-    public List<Review> getAllReviews(String format) throws IOException, ClassNotFoundException {
-        Object deserializedData;
 
-        if ("xml".equalsIgnoreCase(format)) {
-            deserializedData = persistence.deserializeObjectXML(XML_PATH);
-        } else {
-            deserializedData = persistence.deserializeObject(DAT_PATH);
-        }
+    public List<Review> findReviewsByOwner(String ownerRef) throws IOException, ClassNotFoundException {
+        List<Review> reviews = getAllReviews();
+        return reviews.stream()
+                .filter(review -> review.getOwnerRef().equalsIgnoreCase(ownerRef))
+                .collect(Collectors.toList());
+    }
 
-        if (deserializedData instanceof List<?>) {
-            return (List<Review>) deserializedData;
-        } else {
-            return new ArrayList<>();
-        }
-    }
-    @SuppressWarnings("unused")
-    private void serializeReviews(String format, List<Review> reviews) throws IOException {
-        if ("xml".equalsIgnoreCase(format)) {
-            persistence.serializeObjectXML(XML_PATH, reviews);
-        } else {
-            persistence.serializeObject(DAT_PATH, reviews);
-        }
-    }
-    // Convert the Listica into JSON for handling the responses
-    public String convertToJson(List<Review> reviews) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(reviews);
+    public List<Review> findReviewsByAuthor(String authorRef) throws IOException, ClassNotFoundException {
+        List<Review> reviews = getAllReviews();
+        return reviews.stream()
+                .filter(review -> review.getAuthorRef().equalsIgnoreCase(authorRef))
+                .collect(Collectors.toList());
     }
 
     public Review findReviewById(String id) throws IOException, ClassNotFoundException {
-        List<Review> reviews = getAllReviewsMerged();
+        List<Review> reviews = getAllReviews();
         return reviews.stream()
                 .filter(review -> review.getId().equals(id))
                 .findFirst()
                 .orElse(null);
     }
 
-    public List<Review> findReviewByAuthor(String nameAuthor) throws IOException, ClassNotFoundException {
-        List<Review> reviews = getAllReviewsMerged();
-        return reviews.stream()
-                .filter(review -> review.getAuthor().getName().equalsIgnoreCase(nameAuthor))
-                .collect(Collectors.toList());
+    public String convertToJson(List<Review> reviews) throws IOException {
+        return persistence.convertToJson(reviews);
     }
 }

@@ -28,8 +28,6 @@ public class SellerController {
             return ResponseEntity.internalServerError().build();
         }
     }
-
-    // Read: Get all sellers
     @GetMapping("/")
     public ResponseEntity<String> getAllSellers() {
         try {
@@ -40,8 +38,8 @@ public class SellerController {
         }
     }
 
-    @GetMapping("/find-by-id")
-    public ResponseEntity<Seller> getSellerById(@RequestParam("id") String id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Seller> getSellerById(@PathVariable String id) {
         try {
             Seller seller = sellerService.findSellerById(id);
             return seller != null ? ResponseEntity.ok(seller) : ResponseEntity.notFound().build();
@@ -50,8 +48,8 @@ public class SellerController {
         }
     }
 
-    @GetMapping("/find-by-name")
-    public ResponseEntity<List<Seller>> getSellersByName(@RequestParam("name") String name) {
+    @GetMapping("/name/{name}")
+    public ResponseEntity<List<Seller>> getSellersByName(@PathVariable String name) {
         try {
             List<Seller> sellers = sellerService.findSellerByName(name);
             return sellers.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(sellers);

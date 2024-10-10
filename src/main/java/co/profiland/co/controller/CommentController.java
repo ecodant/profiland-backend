@@ -1,76 +1,90 @@
 package co.profiland.co.controller;
 
+import java.io.IOException;
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import co.profiland.co.model.Comment;
 import co.profiland.co.service.CommentService;
 
-import java.io.IOException;
-import java.util.List;
-
 @RestController
-@RequestMapping("/profiland/Comments") 
+@RequestMapping("/profiland/comments")
 public class CommentController {
+
     private final CommentService commentService;
 
     public CommentController(CommentService commentService) {
         this.commentService = commentService;
     }
 
-    // Create: Save a new Comment
-    @PostMapping("/save")
-    public ResponseEntity<Comment> saveComment(@RequestBody Comment comment,
-                                             @RequestParam(name = "format", required = false, defaultValue = "dat") String format) {
+    @PostMapping("/")
+    public ResponseEntity<Comment> saveComment(@RequestBody Comment comment) {
         try {
-            Comment savedComment = commentService.saveComment(comment, format);
-            return ResponseEntity.ok(savedComment);
+            Comment savedComment = commentService.saveComment(comment);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedComment);
         } catch (IOException | ClassNotFoundException e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    // Read: Get all Comments
     @GetMapping("/")
     public ResponseEntity<String> getAllComments() {
         try {
-            List<Comment> comments = commentService.getAllCommentsMerged();
+            List<Comment> comments = commentService.getAllComments();
             return ResponseEntity.ok(commentService.convertToJson(comments));
         } catch (IOException | ClassNotFoundException e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GetMapping("/find-by-id")
-    public ResponseEntity<Comment> getCommentById(@RequestParam("id") String id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Comment> getCommentById(@PathVariable String id) {
         try {
             Comment comment = commentService.findCommentById(id);
             return comment != null ? ResponseEntity.ok(comment) : ResponseEntity.notFound().build();
         } catch (IOException | ClassNotFoundException e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/by-product/{productRef}")
+    public ResponseEntity<String> getCommentsByProductRef(@PathVariable String productRef) {
+        try {
+            List<Comment> comments = commentService.findCommentsByProductRef(productRef);
+            return ResponseEntity.ok(commentService.convertToJson(comments));
+        } catch (IOException | ClassNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Comment> updateComment(@PathVariable String id,
-                                               @RequestBody Comment comment,
-                                               @RequestParam(name = "format", required = false, defaultValue = "dat") String format) {
+    public ResponseEntity<Comment> updateComment(@PathVariable String id, @RequestBody Comment comment) {
         try {
-            Comment updatedComment = commentService.updateComment(id, comment, format);
+            Comment updatedComment = commentService.updateComment(id, comment);
             return updatedComment != null ? ResponseEntity.ok(updatedComment) : ResponseEntity.notFound().build();
         } catch (IOException | ClassNotFoundException e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    // Delete: Delete a Comment by ID
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteComment(@PathVariable String id) {
         try {
             boolean isDeleted = commentService.deleteComment(id);
-            return isDeleted ? ResponseEntity.ok("Comment deleted successfully ;D") : ResponseEntity.notFound().build();
+            return isDeleted ? ResponseEntity.ok("Comment deleted successfully.") : ResponseEntity.notFound().build();
         } catch (IOException | ClassNotFoundException e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

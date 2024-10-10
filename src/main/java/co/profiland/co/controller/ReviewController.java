@@ -1,71 +1,91 @@
 package co.profiland.co.controller;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import co.profiland.co.model.Review;
 import co.profiland.co.service.ReviewService;
 
-
-import java.io.IOException;
-import java.util.List;
-
 @RestController
-@RequestMapping("/profiland/Reviews") 
+@RequestMapping("/profiland/reviews")
 public class ReviewController {
+
     private final ReviewService reviewService;
 
     public ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
     }
 
-    // Create: Save a new Review
-    @PostMapping("/save")
-    public ResponseEntity<Review> saveReview(@RequestBody Review review,
-                                             @RequestParam(name = "format", required = false, defaultValue = "dat") String format) {
+    @PostMapping("/")
+    public ResponseEntity<Review> saveReview(@RequestBody Review review) {
         try {
-            Review savedReview = reviewService.saveReview(review, format);
+            Review savedReview = reviewService.saveReview(review);
             return ResponseEntity.ok(savedReview);
         } catch (IOException | ClassNotFoundException e) {
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    // Read: Get all Reviews
     @GetMapping("/")
     public ResponseEntity<String> getAllReviews() {
         try {
-            List<Review> reviews = reviewService.getAllReviewsMerged();
+            List<Review> reviews = reviewService.getAllReviews();
             return ResponseEntity.ok(reviewService.convertToJson(reviews));
         } catch (IOException | ClassNotFoundException e) {
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    @GetMapping("/find-by-id")
-    public ResponseEntity<Review> getReviewById(@RequestParam("id") String id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Review> getReviewById(@PathVariable String id) {
         try {
-            Review Review = reviewService.findReviewById(id);
-            return Review != null ? ResponseEntity.ok(Review) : ResponseEntity.notFound().build();
+            Review review = reviewService.findReviewById(id);
+            return review != null ? ResponseEntity.ok(review) : ResponseEntity.notFound().build();
         } catch (IOException | ClassNotFoundException e) {
             return ResponseEntity.internalServerError().build();
         }
     }
 
+    @GetMapping("/owner/{ownerRef}")
+    public ResponseEntity<String> getReviewsByOwner(@PathVariable String ownerRef) {
+        try {
+            List<Review> reviews = reviewService.findReviewsByOwner(ownerRef);
+            return ResponseEntity.ok(reviewService.convertToJson(reviews));
+        } catch (IOException | ClassNotFoundException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/author/{authorRef}")
+    public ResponseEntity<String> getReviewsByAuthor(@PathVariable String authorRef) {
+        try {
+            List<Review> reviews = reviewService.findReviewsByAuthor(authorRef);
+            return ResponseEntity.ok(reviewService.convertToJson(reviews));
+        } catch (IOException | ClassNotFoundException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Review> updateReview(@PathVariable String id,
-                                               @RequestBody Review review,
-                                               @RequestParam(name = "format", required = false, defaultValue = "dat") String format) {
+    public ResponseEntity<Review> updateReview(@PathVariable String id, @RequestBody Review review) {
         try {
-            Review updatedReview = reviewService.updateReview(id, review, format);
+            Review updatedReview = reviewService.updateReview(id, review);
             return updatedReview != null ? ResponseEntity.ok(updatedReview) : ResponseEntity.notFound().build();
         } catch (IOException | ClassNotFoundException e) {
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    // Delete: Delete a Review by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteReview(@PathVariable String id) {
         try {

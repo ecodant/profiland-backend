@@ -8,7 +8,8 @@ import lombok.Data;
 @Data
 public class Message implements Serializable {
     private String id;
-    private Seller targetSeller;
+    private String targetSellerId;
+    private String reciverSellerId;
     private String content;
     private LocalDateTime dateSending;
 
@@ -16,8 +17,9 @@ public class Message implements Serializable {
 
     }
 
-    public Message(Seller targetSeller, String content, LocalDateTime dateSending){
-        this.targetSeller = targetSeller;
+    public Message(String targetSellerId, String reciverSellerId, String content, LocalDateTime dateSending){
+        this.targetSellerId = targetSellerId;
+        this.reciverSellerId = reciverSellerId;
         this.content = content;
         this.dateSending = dateSending;
     }

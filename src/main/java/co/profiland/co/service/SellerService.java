@@ -2,10 +2,8 @@ package co.profiland.co.service;
 
 import java.io.IOException;
 
-import java.io.File;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
 import co.profiland.co.model.Seller;
@@ -21,32 +19,23 @@ public class SellerService {
     private static final String DAT_PATH = "src/main/resources/sellers/sellers.dat";
 
     private final Persistence persistence = Persistence.getInstance();
-    //private final ObjectMapper jsonMapper = new ObjectMapper(); 
+
+    public SellerService(){
+        persistence.initializeXmlFile(XML_PATH, new ArrayList<Seller>());
+        persistence.initializeXmlFile(DAT_PATH, new ArrayList<Seller>());
+    }
 
     public Seller saveSeller(Seller seller, String format) throws IOException, ClassNotFoundException {
-        List<Seller> sellers;
-        //This part is for the bug that both files needs to existe to save data otherwise didn't work
-        String filePath = "xml".equalsIgnoreCase(format) ? XML_PATH : DAT_PATH;
 
-        File file = new File(filePath);
-        if (!file.exists()) {
-            sellers = new ArrayList<>();
-            if ("xml".equalsIgnoreCase(format)) {
-                persistence.serializeObjectXML(XML_PATH, sellers);
-            } else {
-                persistence.serializeObject(DAT_PATH, sellers);
-            }
-        } else {
-            // If the file exists, read the existing sellers
-            sellers = getAllSellers(format);
-        }
-
-        sellers.add(seller);
+        List<Seller> xmlSellers = getAllSellers("xml");
+        List<Seller> datSellers = getAllSellers("dat");
 
         if ("xml".equalsIgnoreCase(format)) {
-            persistence.serializeObjectXML(XML_PATH, sellers);
+            xmlSellers.add(seller);
+            persistence.serializeObjectXML(XML_PATH, xmlSellers);
         } else {
-            persistence.serializeObject(DAT_PATH, sellers);
+            datSellers.add(seller);
+            persistence.serializeObject(DAT_PATH, datSellers) ;
         }
 
         return seller;
@@ -148,8 +137,7 @@ public class SellerService {
     }
     // Convert the Listica into JSON for handling the responses
     public String convertToJson(List<Seller> sellers) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(sellers);
+        return persistence.convertToJson(sellers);
     }
 
     public Seller findSellerById(String id) throws IOException, ClassNotFoundException {
