@@ -1,6 +1,7 @@
 package co.profiland.co.model;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import lombok.Data;
 
@@ -20,6 +21,18 @@ public class Stadistic implements Serializable {
     }
 
     public void calculateStadistic(){
+
+    }
+
+    public void generateStatsReport(){
+
+    }
+
+    public void showTopProducts(){
+
+    }
+
+    public void FilterForDate(LocalDateTime beginning, LocalDateTime end){
 
     }
 
