@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 import co.profiland.co.model.ContactRequest;
-import co.profiland.co.utilities.Persistence;
+import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -17,13 +17,13 @@ public class ContactRequestService {
 
     private static final String XML_PATH = "src/main/resources/contactRequest/contactRequest.xml";
 
-    private final Persistence persistence = Persistence.getInstance();
+    private final Utilities persistence = Utilities.getInstance();
 
     public ContactRequestService() {
-        persistence.initializeXmlFile(XML_PATH, new ArrayList<ContactRequest>());
+        persistence.initializeFile(XML_PATH, new ArrayList<ContactRequest>());
     }
 
-    public ContactRequest createContactRequest(ContactRequest contactRequest) throws IOException, ClassNotFoundException {
+    public ContactRequest createContactRequest(ContactRequest contactRequest) throws IOException {
         List<ContactRequest> contactRequests = getAllContactRequests();
 
         if (contactRequest.getId() == null || contactRequest.getId().isEmpty()) {
@@ -31,7 +31,7 @@ public class ContactRequestService {
         }
         contactRequests.add(contactRequest);
 
-        persistence.serializeObjectXML(XML_PATH, contactRequest);
+        persistence.serializeObject(XML_PATH, contactRequests);
         log.info("Saved ContactRequest with ID: {}", contactRequest.getId());
         return contactRequest;
     }
@@ -39,12 +39,12 @@ public class ContactRequestService {
     @SuppressWarnings("unchecked")
     public List<ContactRequest> getAllContactRequests() throws IOException {
         try {
-            Object deserializedData = persistence.deserializeObjectXML(XML_PATH);
+            Object deserializedData = persistence.deserializeObject(XML_PATH);
             if (deserializedData instanceof List<?>) {
                 return (List<ContactRequest>) deserializedData;
             }
         } catch (ClassNotFoundException e) {
-            log.error("Failed to deserialize ContactRequest", e);
+            log.error("Failed to deserialize ContactRequests", e);
         }
         return new ArrayList<>();
     }
@@ -56,7 +56,7 @@ public class ContactRequestService {
             if (contactRequests.get(i).getId().equals(id)) {
                 updatedContactRequest.setId(id);
                 contactRequests.set(i, updatedContactRequest);
-                persistence.serializeObjectXML(XML_PATH, contactRequests);
+                persistence.serializeObject(XML_PATH, contactRequests);
                 log.info("Updated ContactRequest with ID: {}", id);
                 return updatedContactRequest;
             }
@@ -70,7 +70,7 @@ public class ContactRequestService {
         boolean removed = contactRequests.removeIf(contactRequest -> contactRequest.getId().equals(id));
 
         if (removed) {
-            persistence.serializeObjectXML(XML_PATH, contactRequests);
+            persistence.serializeObject(XML_PATH, contactRequests);
             log.info("Deleted ContactRequest with ID: {}", id);
         } else {
             log.warn("ContactRequest not found for deletion. ID: {}", id);
@@ -86,7 +86,7 @@ public class ContactRequestService {
                 .orElse(null);
     }
 
-    public String convertToJson(List<ContactRequest> ContactRequest) throws IOException {
-        return persistence.convertToJson(ContactRequest);
+    public String convertToJson(List<ContactRequest> contactRequests) throws IOException {
+        return persistence.convertToJson(contactRequests);
     }
 }

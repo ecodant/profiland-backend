@@ -13,7 +13,6 @@ import java.util.List;
 @RequestMapping("/profiland/contact-requests")
 @Slf4j
 public class ContactRequestController {
-
     private final ContactRequestService contactRequestService;
 
     public ContactRequestController(ContactRequestService contactRequestService) {
@@ -24,10 +23,10 @@ public class ContactRequestController {
     public ResponseEntity<ContactRequest> createContactRequest(@RequestBody ContactRequest contactRequest) {
         try {
             ContactRequest savedContactRequest = contactRequestService.createContactRequest(contactRequest);
-            return ResponseEntity.ok(savedContactRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedContactRequest);
         } catch (Exception e) {
             log.error("Error creating ContactRequest", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

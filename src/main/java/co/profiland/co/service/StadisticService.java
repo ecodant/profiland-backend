@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 
 import co.profiland.co.model.Stadistic;
-import co.profiland.co.utilities.Persistence;
+import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -20,7 +20,7 @@ public class StadisticService {
     private static final String XML_PATH = "src/main/resources/stadistics/stadistics.xml";
     private static final String DAT_PATH = "src/main/resources/stadistics/stadistics.dat";
 
-    private final Persistence persistence = Persistence.getInstance();
+    private final Utilities persistence = Utilities.getInstance();
     //private final ObjectMapper jsonMapper = new ObjectMapper(); 
 
     public Stadistic saveStadistic(Stadistic stadistic, String format) throws IOException, ClassNotFoundException {
@@ -32,7 +32,7 @@ public class StadisticService {
         if (!file.exists()) {
             stadistics = new ArrayList<>();
             if ("xml".equalsIgnoreCase(format)) {
-                persistence.serializeObjectXML(XML_PATH, stadistics);
+                persistence.serializeObject(XML_PATH, stadistics);
             } else {
                 persistence.serializeObject(DAT_PATH, stadistics);
             }
@@ -44,7 +44,7 @@ public class StadisticService {
         stadistics.add(stadistic);
 
         if ("xml".equalsIgnoreCase(format)) {
-            persistence.serializeObjectXML(XML_PATH, stadistics);
+            persistence.serializeObject(XML_PATH, stadistics);
         } else {
             persistence.serializeObject(DAT_PATH, stadistics);
         }
@@ -110,7 +110,7 @@ public class StadisticService {
         Object deserializedData;
 
         if ("xml".equalsIgnoreCase(format)) {
-            deserializedData = persistence.deserializeObjectXML(XML_PATH);
+            deserializedData = persistence.deserializeObject(XML_PATH);
         } else {
             deserializedData = persistence.deserializeObject(DAT_PATH);
         }
@@ -124,7 +124,7 @@ public class StadisticService {
     @SuppressWarnings("unused")
     private void serializeStadistics(String format, List<Stadistic> stadistics) throws IOException {
         if ("xml".equalsIgnoreCase(format)) {
-            persistence.serializeObjectXML(XML_PATH, stadistics);
+            persistence.serializeObject(XML_PATH, stadistics);
         } else {
             persistence.serializeObject(DAT_PATH, stadistics);
         }

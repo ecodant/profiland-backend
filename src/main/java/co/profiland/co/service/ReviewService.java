@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import co.profiland.co.model.Review;
-import co.profiland.co.utilities.Persistence;
+import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -18,10 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 public class ReviewService {
 
     private static final String XML_PATH = "src/main/resources/reviews/reviews.xml";
-    private final Persistence persistence = Persistence.getInstance();
+    private final Utilities persistence = Utilities.getInstance();
 
     public ReviewService() {
-        persistence.initializeXmlFile(XML_PATH, new ArrayList<Review>());
+        persistence.initializeFile(XML_PATH, new ArrayList<Review>());
     }
 
     public Review saveReview(Review review) throws IOException, ClassNotFoundException {
@@ -32,7 +32,7 @@ public class ReviewService {
         }
 
         reviews.add(review);
-        persistence.serializeObjectXML(XML_PATH, reviews);
+        persistence.serializeObject(XML_PATH, reviews);
 
         log.info("Saved Review with ID: {}", review.getId());
         return review;
@@ -41,7 +41,7 @@ public class ReviewService {
     @SuppressWarnings("unchecked")
     public List<Review> getAllReviews() throws IOException, ClassNotFoundException {
         try {
-            Object deserializedData = persistence.deserializeObjectXML(XML_PATH);
+            Object deserializedData = persistence.deserializeObject(XML_PATH);
             if (deserializedData instanceof List<?>) {
                 return (List<Review>) deserializedData;
             }
@@ -58,7 +58,7 @@ public class ReviewService {
             if (reviews.get(i).getId().equals(id)) {
                 updatedReview.setId(id);
                 reviews.set(i, updatedReview);
-                persistence.serializeObjectXML(XML_PATH, reviews);
+                persistence.serializeObject(XML_PATH, reviews);
                 log.info("Updated review with ID: {}", id);
                 return updatedReview;
             }
@@ -71,7 +71,7 @@ public class ReviewService {
         List<Review> reviews = getAllReviews();
         boolean removed = reviews.removeIf(review -> review.getId().equals(id));
         if (removed) {
-            persistence.serializeObjectXML(XML_PATH, reviews);
+            persistence.serializeObject(XML_PATH, reviews);
             log.info("Deleted review with ID: {}", id);
         } else {
             log.warn("Review not found for deletion. ID: {}", id);

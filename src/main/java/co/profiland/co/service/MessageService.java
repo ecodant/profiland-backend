@@ -8,7 +8,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 import co.profiland.co.model.Message;
-import co.profiland.co.utilities.Persistence;
+import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -16,10 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 public class MessageService {
     
     private static final String XML_PATH = "src/main/resources/messages/messages.xml";
-    private final Persistence persistence = Persistence.getInstance();
+    private final Utilities persistence = Utilities.getInstance();
 
     public MessageService() {
-        persistence.initializeXmlFile(XML_PATH, new ArrayList<Message>());
+        persistence.initializeFile(XML_PATH, new ArrayList<Message>());
     }
 
     public Message saveMessage(Message message) throws IOException, ClassNotFoundException {
@@ -29,7 +29,7 @@ public class MessageService {
             message.setId(UUID.randomUUID().toString());
         }
         messages.add(message);
-        persistence.serializeObjectXML(XML_PATH, messages);
+        persistence.serializeObject(XML_PATH, messages);
 
         log.info("Saved Review with ID: {}", message.getId());
     
@@ -39,7 +39,7 @@ public class MessageService {
     @SuppressWarnings("unchecked")
     public List<Message> getAllMessages() throws IOException, ClassNotFoundException {
         try {
-            Object deserializedData = persistence.deserializeObjectXML(XML_PATH);
+            Object deserializedData = persistence.deserializeObject(XML_PATH);
             if (deserializedData instanceof List<?>) {
                 return (List<Message>) deserializedData;
             }
@@ -55,7 +55,7 @@ public class MessageService {
             if (messages.get(i).getId().equals(id)) {
                 updatedMessage.setId(id);
                 messages.set(i, updatedMessage);
-                persistence.serializeObjectXML(XML_PATH, messages);
+                persistence.serializeObject(XML_PATH, messages);
                 log.info("Message Updated ID: {}", id);
                 return updatedMessage;
             }
@@ -68,7 +68,7 @@ public class MessageService {
         List<Message> messages = getAllMessages();
         boolean removed = messages.removeIf(Message -> Message.getId().equals(id));
         if (removed) {
-            persistence.serializeObjectXML(XML_PATH, messages);
+            persistence.serializeObject(XML_PATH, messages);
             log.info("Deleted message with ID: {}", id);
         } else {
             log.warn("The Message that you wanna deleted was not found. ID: {}", id);

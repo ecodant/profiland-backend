@@ -13,6 +13,8 @@ public class Seller implements Serializable {
     
     private String id;
     private String name;
+    private String email;
+    private String password;
     private String lastName;
     private String license;
     private String address;
@@ -32,8 +34,10 @@ public class Seller implements Serializable {
         this.chats = new HashSet<>();
     }
 
-    public Seller(String name, String lastName, String license, String address, Set<String> contacts, Set<String> products, Set<String> stats, Set<String> chats, Set<String> contactRequests, Wall wall) {
+    public Seller(String name, String lastName,String email,String password, String license, String address, Set<String> contacts, Set<String> products, Set<String> stats, Set<String> chats, Set<String> contactRequests, Wall wall) {
         this.name = name;
+        this.email = email;
+        this.password = password;
         this.lastName = lastName;
         this.license = license;
         this.address = address;
@@ -45,8 +49,8 @@ public class Seller implements Serializable {
         this.wall = wall;
     }
 
-    public Seller(String name, String lastName, String license, String address, List<Stadistic> stats, Wall wall) {
-        this(name, lastName, license, address, new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), wall);
+    public Seller(String name, String email, String password, String lastName, String license, String address, List<Stadistic> stats, Wall wall) {
+        this(name, email, password, lastName, license, address, new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), wall);
     }
 
     public boolean addContact(String contactId) {

@@ -9,14 +9,16 @@ import java.io.Serializable;
 @Data
 public class Wall implements Serializable {
     private String id;
-    private ArrayList<Product> posts;
-
+    private String idOwnerSeller;
+    private ArrayList<String> postsReferences;
+    
     public Wall(){
-        this.posts = new ArrayList<Product>();
+        this.postsReferences = new ArrayList<String>();
     }
 
-    public Wall(ArrayList<Product> posts){
-        this.posts = posts;
+    public Wall(ArrayList<String> posts,String idSeller){
+        this.idOwnerSeller= idSeller;
+        this.postsReferences = posts;
     }
 
     public void showWall(){}

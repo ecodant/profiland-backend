@@ -58,9 +58,9 @@ public class CommentController {
     }
 
     @GetMapping("/by-product/{productRef}")
-    public ResponseEntity<String> getCommentsByProductRef(@PathVariable String productRef) {
+    public ResponseEntity<String> getCommentsByProductRef(@PathVariable String author) {
         try {
-            List<Comment> comments = commentService.findCommentsByProductRef(productRef);
+            List<Comment> comments = commentService.findCommentsByAuthor(author);
             return ResponseEntity.ok(commentService.convertToJson(comments));
         } catch (IOException | ClassNotFoundException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

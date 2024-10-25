@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class Comment implements Serializable{
     private String id;
-    private String productRef;
+    private String author;
     private String content;
     private LocalDateTime date;
 
@@ -16,9 +16,9 @@ public class Comment implements Serializable{
 
     }
 
-    public Comment(String id, String productRef, String content, LocalDateTime date){
+    public Comment(String id, String author, String content, LocalDateTime date){
         this.id = id;
-        this.productRef = productRef;
+        this.author = author;
         this.content = content;
         this.date= date;
     }

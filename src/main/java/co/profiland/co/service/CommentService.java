@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import co.profiland.co.model.Comment;
-import co.profiland.co.utilities.Persistence;
+import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -17,10 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 public class CommentService {
 
     private static final String XML_PATH = "src/main/resources/comments/comments.xml";
-    private final Persistence persistence = Persistence.getInstance();
+    private final Utilities persistence = Utilities.getInstance();
 
     public CommentService(){
-        persistence.initializeXmlFile(XML_PATH, new ArrayList<Comment>());
+        persistence.initializeFile(XML_PATH, new ArrayList<Comment>());
     }
 
     public Comment saveComment(Comment comment) throws IOException, ClassNotFoundException {
@@ -31,7 +31,7 @@ public class CommentService {
         }
 
         comments.add(comment);
-        persistence.serializeObjectXML(XML_PATH, comments);
+        persistence.serializeObject(XML_PATH, comments);
 
         return comment;
     }
@@ -39,7 +39,7 @@ public class CommentService {
     @SuppressWarnings("unchecked")
     public List<Comment> getAllComments() throws IOException, ClassNotFoundException {
         try {
-            Object deserializedData = persistence.deserializeObjectXML(XML_PATH);
+            Object deserializedData = persistence.deserializeObject(XML_PATH);
             if (deserializedData instanceof List<?>) {
                 return (List<Comment>) deserializedData;
             }
@@ -57,7 +57,7 @@ public class CommentService {
             if (comments.get(i).getId().equals(id)) {
                 updatedComment.setId(id);
                 comments.set(i, updatedComment);
-                persistence.serializeObjectXML(XML_PATH, comments);
+                persistence.serializeObject(XML_PATH, comments);
                 return updatedComment;
             }
         }
@@ -69,7 +69,7 @@ public class CommentService {
         List<Comment> comments = getAllComments();
         boolean removed = comments.removeIf(comment -> comment.getId().equals(id));
         if (removed) {
-            persistence.serializeObjectXML(XML_PATH, comments);
+            persistence.serializeObject(XML_PATH, comments);
             log.info("Deleted comment with the ID: {}", id);
         } else {
             log.warn("Comment not found. its ID is: {}", id);
@@ -77,10 +77,10 @@ public class CommentService {
         return removed;
     }
 
-    public List<Comment> findCommentsByProductRef(String productRef) throws IOException, ClassNotFoundException {
+    public List<Comment> findCommentsByAuthor(String author) throws IOException, ClassNotFoundException {
         List<Comment> comments = getAllComments();
         return comments.stream()
-                .filter(comment -> comment.getProductRef().equalsIgnoreCase(productRef))
+                .filter(comment -> comment.getAuthor().equalsIgnoreCase(author))
                 .collect(Collectors.toList());
     }
 

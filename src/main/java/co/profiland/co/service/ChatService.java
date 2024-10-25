@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
 import co.profiland.co.model.Chat;
-import co.profiland.co.utilities.Persistence;
+import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -19,7 +19,7 @@ public class ChatService {
     private static final String XML_PATH = "src/main/resources/chats/chats.xml";
     private static final String DAT_PATH = "src/main/resources/chats/chats.dat";
 
-    private final Persistence persistence = Persistence.getInstance();
+    private final Utilities persistence = Utilities.getInstance();
     //private final ObjectMapper jsonMapper = new ObjectMapper(); 
 
     public Chat saveChat(Chat chat, String format) throws IOException, ClassNotFoundException {
@@ -31,7 +31,7 @@ public class ChatService {
         if (!file.exists()) {
             chats = new ArrayList<>();
             if ("xml".equalsIgnoreCase(format)) {
-                persistence.serializeObjectXML(XML_PATH, chats);
+                persistence.serializeObject(XML_PATH, chats);
             } else {
                 persistence.serializeObject(DAT_PATH, chats);
             }
@@ -43,7 +43,7 @@ public class ChatService {
         chats.add(chat);
 
         if ("xml".equalsIgnoreCase(format)) {
-            persistence.serializeObjectXML(XML_PATH, chats);
+            persistence.serializeObject(XML_PATH, chats);
         } else {
             persistence.serializeObject(DAT_PATH, chats);
         }
@@ -127,7 +127,7 @@ public class ChatService {
         Object deserializedData;
 
         if ("xml".equalsIgnoreCase(format)) {
-            deserializedData = persistence.deserializeObjectXML(XML_PATH);
+            deserializedData = persistence.deserializeObject(XML_PATH);
         } else {
             deserializedData = persistence.deserializeObject(DAT_PATH);
         }
@@ -140,7 +140,7 @@ public class ChatService {
     }
     private void serializeChats(String format, List<Chat> chats) throws IOException {
         if ("xml".equalsIgnoreCase(format)) {
-            persistence.serializeObjectXML(XML_PATH, chats);
+            persistence.serializeObject(XML_PATH, chats);
         } else {
             persistence.serializeObject(DAT_PATH, chats);
         }

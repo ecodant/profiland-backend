@@ -2,14 +2,11 @@ package co.profiland.co.service;
 
 import java.io.IOException;
 
-import java.io.File;
 import org.springframework.stereotype.Service;
-
-
 import java.util.*;
 
 import co.profiland.co.model.Product;
-import co.profiland.co.utilities.Persistence;
+import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import java.util.stream.Collectors;
 
@@ -17,25 +14,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProductService {
 
-    private static final String XML_PATH = "src/main/resources/products/products.xml";
+    private static final String XML_PATH = "C:/td/persistence/products/products.xml";
 
-    private final Persistence persistence = Persistence.getInstance();
+    private final Utilities persistence = Utilities.getInstance();
 
     public ProductService() {
-        initializeXmlFile();
+        persistence.initializeFile(XML_PATH, new ArrayList<Product>());
     }
 
-    private void initializeXmlFile() {
-        File file = new File(XML_PATH);
-        if (!file.exists()) {
-            try {
-                file.getParentFile().mkdirs();
-                persistence.serializeObjectXML(XML_PATH, new ArrayList<Product>());
-            } catch (IOException e) {
-                log.error("Failed to initialize XML file", e);
-            }
-        }
-    }
 
     public Product saveProduct(Product product) throws IOException {
         List<Product> products = getAllProducts();
@@ -45,7 +31,7 @@ public class ProductService {
         }
         products.add(product);
 
-        persistence.serializeObjectXML(XML_PATH, products);
+        persistence.serializeObject(XML_PATH, products);
         log.info("Saved product with ID: {}", product.getId());
         return product;
     }
@@ -53,7 +39,7 @@ public class ProductService {
     @SuppressWarnings("unchecked")
     public List<Product> getAllProducts() throws IOException {
         try {
-            Object deserializedData = persistence.deserializeObjectXML(XML_PATH);
+            Object deserializedData = persistence.deserializeObject(XML_PATH);
             if (deserializedData instanceof List<?>) {
                 return (List<Product>) deserializedData;
             }
@@ -70,7 +56,7 @@ public class ProductService {
             if (products.get(i).getId().equals(id)) {
                 updatedProduct.setId(id);
                 products.set(i, updatedProduct);
-                persistence.serializeObjectXML(XML_PATH, products);
+                persistence.serializeObject(XML_PATH, products);
                 log.info("Updated product with ID: {}", id);
                 return updatedProduct;
             }
@@ -84,7 +70,7 @@ public class ProductService {
         boolean removed = products.removeIf(product -> product.getId().equals(id));
 
         if (removed) {
-            persistence.serializeObjectXML(XML_PATH, products);
+            persistence.serializeObject(XML_PATH, products);
             log.info("Deleted product with ID: {}", id);
         } else {
             log.warn("Product not found for deletion. ID: {}", id);
