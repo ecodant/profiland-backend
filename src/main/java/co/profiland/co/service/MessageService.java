@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import co.profiland.co.exception.BackupException;
+import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.model.Message;
 import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +21,11 @@ public class MessageService {
     private final Utilities persistence = Utilities.getInstance();
 
     public MessageService() {
-        persistence.initializeFile(XML_PATH, new ArrayList<Message>());
+        try {
+            persistence.initializeFile(XML_PATH, new ArrayList<Message>());
+        } catch (BackupException | PersistenceException e) {
+            e.printStackTrace();
+        }
     }
 
     public Message saveMessage(Message message) throws IOException, ClassNotFoundException {
@@ -38,13 +44,9 @@ public class MessageService {
 
     @SuppressWarnings("unchecked")
     public List<Message> getAllMessages() throws IOException, ClassNotFoundException {
-        try {
-            Object deserializedData = persistence.deserializeObject(XML_PATH);
-            if (deserializedData instanceof List<?>) {
-                return (List<Message>) deserializedData;
-            }
-        } catch (ClassNotFoundException e) {
-            log.error("Failed to deserialize messages", e);
+        Object deserializedData = persistence.deserializeObject(XML_PATH);
+        if (deserializedData instanceof List<?>) {
+            return (List<Message>) deserializedData;
         }
         return new ArrayList<>();
     }

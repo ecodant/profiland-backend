@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+import co.profiland.co.exception.BackupException;
+import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.model.ContactRequest;
 import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +22,11 @@ public class ContactRequestService {
     private final Utilities persistence = Utilities.getInstance();
 
     public ContactRequestService() {
-        persistence.initializeFile(XML_PATH, new ArrayList<ContactRequest>());
+        try {
+            persistence.initializeFile(XML_PATH, new ArrayList<ContactRequest>());
+        } catch (BackupException | PersistenceException e) {
+            e.printStackTrace();
+        }
     }
 
     public ContactRequest createContactRequest(ContactRequest contactRequest) throws IOException {
@@ -38,13 +44,9 @@ public class ContactRequestService {
 
     @SuppressWarnings("unchecked")
     public List<ContactRequest> getAllContactRequests() throws IOException {
-        try {
-            Object deserializedData = persistence.deserializeObject(XML_PATH);
-            if (deserializedData instanceof List<?>) {
-                return (List<ContactRequest>) deserializedData;
-            }
-        } catch (ClassNotFoundException e) {
-            log.error("Failed to deserialize ContactRequests", e);
+        Object deserializedData = persistence.deserializeObject(XML_PATH);
+        if (deserializedData instanceof List<?>) {
+            return (List<ContactRequest>) deserializedData;
         }
         return new ArrayList<>();
     }

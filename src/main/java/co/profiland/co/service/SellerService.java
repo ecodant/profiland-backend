@@ -10,15 +10,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 import co.profiland.co.components.ThreadPoolManager;
-import co.profiland.co.exception.DataNotSave;
+import co.profiland.co.exception.BackupException;
 import co.profiland.co.exception.InvalidCredentials;
+import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.exception.SellerNotFoundException;
 import co.profiland.co.model.Seller;
-import lombok.extern.slf4j.Slf4j;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class SellerService {
 
     private final String XML_PATH ="C:/td/persistence/sellers/sellers.xml";
@@ -28,8 +27,16 @@ public class SellerService {
     private final Utilities persistence = Utilities.getInstance();
 
     public SellerService() {
-        persistence.initializeFile(XML_PATH, new ArrayList<Seller>());
-        persistence.initializeFile(DAT_PATH, new ArrayList<Seller>());
+        try {
+            persistence.initializeFile(XML_PATH, new ArrayList<Seller>());
+        } catch (BackupException | PersistenceException e) {
+            e.printStackTrace();
+        }
+        try {
+            persistence.initializeFile(DAT_PATH, new ArrayList<Seller>());
+        } catch (BackupException | PersistenceException e) {
+            e.printStackTrace();
+        }
         Utilities.setupLogger(LOG_PATH);
     }
 
@@ -39,7 +46,7 @@ public class SellerService {
             sellers.add(seller);
             persistence.serializeObject(format.equalsIgnoreCase("xml") ? XML_PATH : DAT_PATH, sellers);
             //Log Requirement - Second Delivery
-            persistence.writeIntoLogger("Seller with ID" + seller.getId() + "was register", Level.FINE);
+            persistence.writeIntoLogger("Seller with ID " + seller.getId() + " was register", Level.FINE);
             return seller;
         });
     }
@@ -78,7 +85,7 @@ public class SellerService {
                     sellers.set(i, updatedSeller);
                     serializeSellers(format, sellers);
                     //Log Requirement - Second Delivery
-                    persistence.writeIntoLogger("Seller with ID" + updatedSeller.getId() + "updated its data",Level.FINE);
+                    persistence.writeIntoLogger("Seller with ID " + updatedSeller.getId() + " updated its data",Level.FINE);
                     return updatedSeller;
                 }
             }
@@ -100,7 +107,7 @@ public class SellerService {
                         serializeSellers("xml", sellers));
                     
                     // Wait for both operations to complete
-                    persistence.writeIntoLogger("Seller with ID" + id + "was deleted sucessfully", Level.FINE);
+                    persistence.writeIntoLogger("Seller with ID " + id + " was deleted sucessfully", Level.FINE);
                     CompletableFuture.allOf(datFuture, xmlFuture).join();
                     return true;
                 }
@@ -130,7 +137,6 @@ public class SellerService {
                         })
                         .orElseThrow(() -> new InvalidCredentials("No seller found with email: " + email));
                 } catch (InvalidCredentials e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 return null;
@@ -156,19 +162,10 @@ public class SellerService {
     }
 
     private void serializeSellers(String format, List<Seller> sellers) {
-        try {
-            if ("xml".equalsIgnoreCase(format)) {
-                persistence.serializeObject(XML_PATH, sellers);
-            } else {
-                persistence.serializeObject(DAT_PATH, sellers);
-            }
-        } catch (IOException e) {
-            try {   
-                //Custom Exeption
-                throw new DataNotSave("Failed to serialize sellers");
-            } catch (Exception e1) {
-                // TODO: handle exception
-            }
+        if ("xml".equalsIgnoreCase(format)) {
+            persistence.serializeObject(XML_PATH, sellers);
+        } else {
+            persistence.serializeObject(DAT_PATH, sellers);
         }
     }
 
@@ -178,7 +175,7 @@ public class SellerService {
 
     public CompletableFuture<Seller> findSellerById(String id) {
 
-        persistence.writeIntoLogger("Searching Seller by the ID" + id, Level.INFO);
+        persistence.writeIntoLogger("Searching Seller by the ID " + id, Level.INFO);
         return getAllSellersMerged()
             .thenApply(sellers -> {
                 try {

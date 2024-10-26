@@ -17,7 +17,7 @@ public class Product implements Serializable {
     private String image;
     private String category;
     private Integer price;
-    private String state;
+    private State state;
     private LocalDateTime publicationDate;
     private ArrayList<Comment> comments;
     private Integer likes;
@@ -26,26 +26,26 @@ public class Product implements Serializable {
     public Product(){
     }
 
-    public Product(String name, String code, String image, String category, Integer price, LocalDateTime publicationDate, ArrayList<Comment> comments, Integer likes, String sellerId){
+    public Product(String name, String code, String image, String category, Integer price,State state, LocalDateTime publicationDate, ArrayList<Comment> comments, Integer likes, String sellerId){
         this.name = name;
         this.code = code;
         this.image = image;
         this.category = category;
         this.price = price;
-        this.state = State.AVAILABLE.toString();
+        this.state = state;
         this.publicationDate = publicationDate;
         this.comments = comments;
         this.likes = likes;
         this.sellerId = sellerId;
     }
 
-    public Product(String name, String code, String image, String category, Integer price, LocalDateTime publicationDate, Integer likes, String sellerId){
+    public Product(String name, String code, String image, String category, Integer price,State state, LocalDateTime publicationDate, Integer likes, String sellerId){
         this.name = name;
         this.code = code;
         this.image = image;
         this.category = category;
         this.price = price;
-        this.state = State.AVAILABLE.toString();
+        this.state = state;
         this.publicationDate = publicationDate;
         this.comments = new ArrayList<Comment>();
         this.likes = likes;

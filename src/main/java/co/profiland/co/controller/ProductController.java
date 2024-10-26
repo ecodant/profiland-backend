@@ -1,18 +1,16 @@
 package co.profiland.co.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import co.profiland.co.exception.ProductNotFound;
 import co.profiland.co.model.Product;
 import co.profiland.co.service.ProductService;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-
+import java.util.concurrent.CompletableFuture;
 @RestController
 @RequestMapping("/profiland/products")
-@Slf4j
 public class ProductController {
 
     private final ProductService productService;
@@ -21,69 +19,63 @@ public class ProductController {
         this.productService = productService;
     }
 
+    // Save a Product
     @PostMapping("/")
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        try {
-            Product savedProduct = productService.saveProduct(product);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
-        } catch (Exception e) {
-            log.error("Error creating product", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public CompletableFuture<ResponseEntity<Product>> saveProduct(@RequestBody Product product) {
+        return productService.saveProductOnList(product)
+                .thenApply(ResponseEntity::ok)
+                .exceptionally(ex -> ResponseEntity.internalServerError().build());
     }
 
-    @GetMapping("/")
-    public ResponseEntity<List<Product>> getAllProducts() {
-        try {
-            List<Product> products = productService.getAllProducts();
-            return ResponseEntity.ok(products);
-        } catch (Exception e) {
-            log.error("Error retrieving all products", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
+    // Get Product by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable String id) {
-        try {
-            Product product = productService.findProductById(id);
-            return product != null ? ResponseEntity.ok(product) : ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Error retrieving product by ID: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public CompletableFuture<ResponseEntity<Product>> getProductById(@PathVariable String id) {
+        return productService.findProductById(id)
+                .thenApply(ResponseEntity::ok)
+                .exceptionally(ex -> {
+                    if (ex.getCause() instanceof ProductNotFound) {
+                        return ResponseEntity.notFound().build();
+                    }
+                    return ResponseEntity.internalServerError().build();
+                });
     }
 
-    @GetMapping("/name/{name}")
-    public ResponseEntity<List<Product>> getProductByName(@PathVariable String name) {
-        try {
-            List<Product> products = productService.findProductByName(name);
-            return ResponseEntity.ok(products);
-        } catch (Exception e) {
-            log.error("Error retrieving products by name: {}", name, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
+    // Update Product by ID
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable String id, @RequestBody Product product) {
-        try {
-            Product updatedProduct = productService.updateProduct(id, product);
-            return updatedProduct != null ? ResponseEntity.ok(updatedProduct) : ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Error updating product with ID: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public CompletableFuture<ResponseEntity<Product>> updateProduct(
+            @PathVariable String id, @RequestBody Product product) {
+        return productService.updateProduct(id, product)
+                .thenApply(ResponseEntity::ok)
+                .exceptionally(ex -> ResponseEntity.internalServerError().build());
     }
 
+    // Delete Product by ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
-        try {
-            boolean deleted = productService.deleteProduct(id);
-            return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            log.error("Error deleting product with ID: {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public CompletableFuture<ResponseEntity<? extends Object>> deleteProduct(@PathVariable String id) {
+        return productService.deleteProduct(id)
+                .thenApply(deleted -> deleted
+                        ? ResponseEntity.ok("Product deleted successfully")
+                        : ResponseEntity.notFound().build())
+                .exceptionally(ex -> ResponseEntity.internalServerError().build());
+    }
+
+    // Get All Products
+    @GetMapping("/")
+    public CompletableFuture<ResponseEntity<List<Product>>> getAllProducts() {
+        return productService.getAllProducts()
+                .thenApply(ResponseEntity::ok)
+                .exceptionally(ex -> ResponseEntity.internalServerError().build());
+    }
+
+    // Get Products by Name
+    @GetMapping("/name/{name}")
+    public CompletableFuture<ResponseEntity<? extends Object>> getProductsByName(@PathVariable String name) {
+        return productService.findProductsByName(name)
+                .thenApply(products -> {
+                    if (products.isEmpty()) {
+                        return ResponseEntity.notFound().build();
+                    }
+                    return ResponseEntity.ok(products);
+                }).exceptionally(ex -> ResponseEntity.internalServerError().build());
     }
 }

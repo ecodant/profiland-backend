@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import co.profiland.co.exception.BackupException;
+import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.model.Comment;
 import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +22,12 @@ public class CommentService {
     private final Utilities persistence = Utilities.getInstance();
 
     public CommentService(){
-        persistence.initializeFile(XML_PATH, new ArrayList<Comment>());
+        try {
+            persistence.initializeFile(XML_PATH, new ArrayList<Comment>());
+        } catch (BackupException | PersistenceException e) {
+            
+            e.printStackTrace();
+        }
     }
 
     public Comment saveComment(Comment comment) throws IOException, ClassNotFoundException {

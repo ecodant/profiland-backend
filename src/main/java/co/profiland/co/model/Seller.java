@@ -20,6 +20,7 @@ public class Seller implements Serializable {
     private String address;
     
     // Reference fields to other entities (Avoiding nested objects)
+    private Set<String> reviews;
     private Set<String> contacts;
     private Set<String> products;
     private Set <String> stats;
@@ -34,13 +35,14 @@ public class Seller implements Serializable {
         this.chats = new HashSet<>();
     }
 
-    public Seller(String name, String lastName,String email,String password, String license, String address, Set<String> contacts, Set<String> products, Set<String> stats, Set<String> chats, Set<String> contactRequests, Wall wall) {
+    public Seller(String name, String lastName,String email,String password, String license, String address, Set<String> reviews, Set<String> contacts, Set<String> products, Set<String> stats, Set<String> chats, Set<String> contactRequests, Wall wall) {
         this.name = name;
         this.email = email;
         this.password = password;
         this.lastName = lastName;
         this.license = license;
         this.address = address;
+        this.reviews = reviews != null ? reviews : new HashSet<>();
         this.contacts = contacts != null ? contacts : new HashSet<>();
         this.products = products != null ? products : new HashSet<>();
         this.stats = stats;
@@ -50,7 +52,7 @@ public class Seller implements Serializable {
     }
 
     public Seller(String name, String email, String password, String lastName, String license, String address, List<Stadistic> stats, Wall wall) {
-        this(name, email, password, lastName, license, address, new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), wall);
+        this(name, email, password, lastName, license, address,new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), wall);
     }
 
     public boolean addContact(String contactId) {

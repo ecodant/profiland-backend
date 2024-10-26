@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import co.profiland.co.exception.BackupException;
+import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.model.Review;
 import co.profiland.co.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +23,11 @@ public class ReviewService {
     private final Utilities persistence = Utilities.getInstance();
 
     public ReviewService() {
-        persistence.initializeFile(XML_PATH, new ArrayList<Review>());
+        try {
+            persistence.initializeFile(XML_PATH, new ArrayList<Review>());
+        } catch (BackupException | PersistenceException e) {
+            e.printStackTrace();
+        }
     }
 
     public Review saveReview(Review review) throws IOException, ClassNotFoundException {
@@ -40,13 +46,9 @@ public class ReviewService {
 
     @SuppressWarnings("unchecked")
     public List<Review> getAllReviews() throws IOException, ClassNotFoundException {
-        try {
-            Object deserializedData = persistence.deserializeObject(XML_PATH);
-            if (deserializedData instanceof List<?>) {
-                return (List<Review>) deserializedData;
-            }
-        } catch (ClassNotFoundException e) {
-            log.error("Failed to deserialize reviews", e);
+        Object deserializedData = persistence.deserializeObject(XML_PATH);
+        if (deserializedData instanceof List<?>) {
+            return (List<Review>) deserializedData;
         }
         return new ArrayList<>();
     }
