@@ -16,7 +16,7 @@ import co.profiland.co.utils.Utilities;
 @Service
 public class WallService {
     
-    private static final String XML_PATH = "src/main/resources/walls/walls.xml";
+    private static final String XML_PATH = "C:/td/persistence/models/walls/wall.xml";
     private final Utilities persistence;
     private final ThreadPoolManager threadPool;
 

@@ -1,28 +1,30 @@
 package co.profiland.co.service;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import co.profiland.co.components.ThreadPoolManager;
 import co.profiland.co.exception.BackupException;
 import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.model.Review;
 import co.profiland.co.utils.Utilities;
-import lombok.extern.slf4j.Slf4j;
-
 
 @Service
-@Slf4j
 public class ReviewService {
+    
+    private static final String XML_PATH = "C:/td/persistence/models/reviews/review.xml";
+    private final Utilities persistence;
+    private final ThreadPoolManager threadPool;
 
-    private static final String XML_PATH = "src/main/resources/reviews/reviews.xml";
-    private final Utilities persistence = Utilities.getInstance();
-
-    public ReviewService() {
+    public ReviewService(Utilities persistence) {
+        this.persistence = persistence;
+        this.threadPool = ThreadPoolManager.getInstance();
         try {
             persistence.initializeFile(XML_PATH, new ArrayList<Review>());
         } catch (BackupException | PersistenceException e) {
@@ -30,80 +32,123 @@ public class ReviewService {
         }
     }
 
-    public Review saveReview(Review review) throws IOException, ClassNotFoundException {
-        List<Review> reviews = getAllReviews();
-    
-        if (review.getId() == null || review.getId().isEmpty()) {
-            review.setId(UUID.randomUUID().toString());
-        }
+    public CompletableFuture<Review> createReview(Review review) {
+        return threadPool.submitTask(() -> {
+            List<Review> reviews = getAllReviews().get();
 
-        reviews.add(review);
-        persistence.serializeObject(XML_PATH, reviews);
+            if (review.getId() == null || review.getId().isEmpty()) {
+                review.setId(UUID.randomUUID().toString());
+            }
+            reviews.add(review);
 
-        log.info("Saved Review with ID: {}", review.getId());
-        return review;
+            persistence.serializeObject(XML_PATH, reviews);
+            persistence.writeIntoLogger("Review with ID " + review.getId() + " was created", Level.FINE);
+            return review;
+        });
     }
 
     @SuppressWarnings("unchecked")
-    public List<Review> getAllReviews() throws IOException, ClassNotFoundException {
-        Object deserializedData = persistence.deserializeObject(XML_PATH);
-        if (deserializedData instanceof List<?>) {
-            return (List<Review>) deserializedData;
-        }
-        return new ArrayList<>();
-    }
-
-    public Review updateReview(String id, Review updatedReview) throws IOException, ClassNotFoundException {
-        List<Review> reviews = getAllReviews();
-
-        for (int i = 0; i < reviews.size(); i++) {
-            if (reviews.get(i).getId().equals(id)) {
-                updatedReview.setId(id);
-                reviews.set(i, updatedReview);
-                persistence.serializeObject(XML_PATH, reviews);
-                log.info("Updated review with ID: {}", id);
-                return updatedReview;
+    public CompletableFuture<List<Review>> getAllReviews() {
+        return threadPool.submitTask(() -> {
+            Object deserializedData = persistence.deserializeObject(XML_PATH);
+            if (deserializedData instanceof List<?>) {
+                persistence.writeIntoLogger("Retrieved all reviews successfully", Level.FINE);
+                return (List<Review>) deserializedData;
             }
-        }
-        log.warn("Review not found for bro. ID: {}", id);
-        return null;
+            return new ArrayList<>();
+        });
     }
 
-    public boolean deleteReview(String id) throws IOException, ClassNotFoundException {
-        List<Review> reviews = getAllReviews();
-        boolean removed = reviews.removeIf(review -> review.getId().equals(id));
-        if (removed) {
-            persistence.serializeObject(XML_PATH, reviews);
-            log.info("Deleted review with ID: {}", id);
-        } else {
-            log.warn("Review not found for deletion. ID: {}", id);
-        }
-        return removed;
+    public CompletableFuture<Review> updateReview(String id, Review updatedReview) {
+        return threadPool.submitTask(() -> {
+            List<Review> reviews = getAllReviews().get();
+
+            for (int i = 0; i < reviews.size(); i++) {
+                if (reviews.get(i).getId().equals(id)) {
+                    updatedReview.setId(id);
+                    reviews.set(i, updatedReview);
+                    persistence.serializeObject(XML_PATH, reviews);
+                    persistence.writeIntoLogger("Review with ID " + id + " was updated", Level.FINE);
+                    return updatedReview;
+                }
+            }
+            persistence.writeIntoLogger("Review with ID " + id + " not found for update", Level.WARNING);
+            return null;
+        });
     }
 
-    public List<Review> findReviewsByOwner(String ownerRef) throws IOException, ClassNotFoundException {
-        List<Review> reviews = getAllReviews();
-        return reviews.stream()
-                .filter(review -> review.getOwnerRef().equalsIgnoreCase(ownerRef))
-                .collect(Collectors.toList());
+    public CompletableFuture<Boolean> deleteReview(String id) {
+        return threadPool.submitTask(() -> {
+            List<Review> reviews = getAllReviews().get();
+            boolean removed = reviews.removeIf(review -> review.getId().equals(id));
+
+            if (removed) {
+                persistence.serializeObject(XML_PATH, reviews);
+                persistence.writeIntoLogger("Review with ID " + id + " was deleted", Level.FINE);
+            } else {
+                persistence.writeIntoLogger("Review with ID " + id + " not found for deletion", Level.WARNING);
+            }
+
+            return removed;
+        });
     }
 
-    public List<Review> findReviewsByAuthor(String authorRef) throws IOException, ClassNotFoundException {
-        List<Review> reviews = getAllReviews();
-        return reviews.stream()
-                .filter(review -> review.getAuthorRef().equalsIgnoreCase(authorRef))
-                .collect(Collectors.toList());
-    }
-
-    public Review findReviewById(String id) throws IOException, ClassNotFoundException {
-        List<Review> reviews = getAllReviews();
-        return reviews.stream()
-                .filter(review -> review.getId().equals(id))
+    public CompletableFuture<Review> findReviewById(String id) {
+        return threadPool.submitTask(() -> {
+            Review review = getAllReviews().get().stream()
+                .filter(r -> r.getId().equals(id))
                 .findFirst()
                 .orElse(null);
+                
+            if (review != null) {
+                persistence.writeIntoLogger("Review with ID " + id + " was found", Level.FINE);
+            } else {
+                persistence.writeIntoLogger("Review with ID " + id + " not found", Level.WARNING);
+            }
+            return review;
+        });
     }
 
-    public String convertToJson(List<Review> reviews) throws IOException {
-        return persistence.convertToJson(reviews);
+    public CompletableFuture<List<Review>> findReviewsByAuthor(String authorRef) {
+        return threadPool.submitTask(() -> {
+            List<Review> reviews = getAllReviews().get().stream()
+                .filter(r -> r.getAuthorRef().equals(authorRef))
+                .collect(Collectors.toList());
+                
+            persistence.writeIntoLogger("Found " + reviews.size() + " reviews for author " + authorRef, Level.FINE);
+            return reviews;
+        });
+    }
+
+    public CompletableFuture<List<Review>> findReviewsByOwner(String ownerRef) {
+        return threadPool.submitTask(() -> {
+            List<Review> reviews = getAllReviews().get().stream()
+                .filter(r -> r.getOwnerRef().equals(ownerRef))
+                .collect(Collectors.toList());
+                
+            persistence.writeIntoLogger("Found " + reviews.size() + " reviews for owner " + ownerRef, Level.FINE);
+            return reviews;
+        });
+    }
+
+    public CompletableFuture<Double> getAverageCalificationByOwner(String ownerRef) {
+        return threadPool.submitTask(() -> {
+            List<Review> ownerReviews = findReviewsByOwner(ownerRef).get();
+            double average = ownerReviews.stream()
+                .mapToInt(Review::getCalification)
+                .average()
+                .orElse(0.0);
+                
+            persistence.writeIntoLogger("Calculated average calification for owner " + ownerRef + ": " + average, Level.FINE);
+            return average;
+        });
+    }
+
+    public CompletableFuture<String> convertToJson(List<Review> reviews) {
+        return threadPool.submitTask(() -> {
+            String json = persistence.convertToJson(reviews);
+            persistence.writeIntoLogger("Converted " + reviews.size() + " reviews to JSON", Level.FINE);
+            return json;
+        });
     }
 }

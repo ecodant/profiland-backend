@@ -20,9 +20,9 @@ import java.util.stream.Collectors;
 @Service
 public class SellerService {
 
-    private final String XML_PATH ="C:/td/persistence/sellers/sellers.xml";
-    private final String DAT_PATH ="C:/td/persistence/sellers/sellers.dat";
-    private final String LOG_PATH ="C:/td/persistence/log/seller_session.log";
+    private final String XML_PATH ="C:/td/persistence/models/sellers/sellers.xml";
+    private final String DAT_PATH ="C:/td/persistence/models/sellers/sellers.dat";
+    private final String LOG_PATH ="C:/td/persistence/log/Profiland_Log.log";
     private final ThreadPoolManager threadPool = ThreadPoolManager.getInstance();
     private final Utilities persistence = Utilities.getInstance();
 
