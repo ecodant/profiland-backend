@@ -9,20 +9,22 @@ import co.profiland.co.exception.InvalidCredentials;
 import co.profiland.co.exception.SellerNotFoundException;
 import co.profiland.co.model.Seller;
 import co.profiland.co.service.SellerService;
-import lombok.extern.slf4j.Slf4j;
+import co.profiland.co.utils.Utilities;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 
 @RestController
 @RequestMapping("/profiland/sellers")
-@Slf4j
 public class SellerController {
     private final SellerService sellerService;
+    private final Utilities persistence = Utilities.getInstance();
 
     public SellerController(SellerService sellerService) {
         this.sellerService = sellerService;
+        Utilities.setupLogger("C:/td/persistence/log/Profiland_Log.log");
     }
 
     @PostMapping("/register")
@@ -32,7 +34,7 @@ public class SellerController {
         return sellerService.saveSeller(seller, format)
                 .thenApply(ResponseEntity::ok)
                 .exceptionally(throwable -> {
-                    logError("Error saving seller", throwable);
+                    persistence.writeIntoLogger("Error saving Seller UI Sign Up", Level.WARNING);
                     return ResponseEntity.internalServerError().build();
                 });
     }
@@ -43,10 +45,9 @@ public class SellerController {
                 .thenApply(ResponseEntity::ok)
                 .exceptionally(throwable -> {
                     if (throwable.getCause() instanceof InvalidCredentials) {
-                        log.warn("Login failed for email: {}", loginRequest.getEmail());
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
                     }
-                    logError("Error during authentication", throwable);
+                    persistence.writeIntoLogger("Error during authentication in the Login Tab", Level.WARNING);
                     return ResponseEntity.internalServerError().build();
                 });
     }
@@ -57,7 +58,6 @@ public class SellerController {
                 .thenCompose(sellers -> sellerService.convertToJson(sellers))
                 .thenApply(jsonString -> ResponseEntity.ok().body(jsonString))
                 .exceptionally(throwable -> {
-                    logError("Error fetching all sellers", throwable);
                     return ResponseEntity.internalServerError().build();
                 });
     }
@@ -73,7 +73,7 @@ public class SellerController {
                     if (throwable.getCause() instanceof SellerNotFoundException) {
                         return ResponseEntity.<Seller>notFound().build();
                     }
-                    logError("Error fetching seller by ID", throwable);
+                    persistence.writeIntoLogger("Error fetching seller by ID", Level.WARNING);
                     return ResponseEntity.<Seller>internalServerError().build();
                 });
     }
@@ -86,7 +86,6 @@ public class SellerController {
                     ResponseEntity.<List<Seller>>notFound().build() : 
                     ResponseEntity.ok().body(sellers))
                 .exceptionally(throwable -> {
-                    logError("Error fetching sellers by name", throwable);
                     return ResponseEntity.<List<Seller>>internalServerError().build();
                 });
     }
@@ -103,7 +102,7 @@ public class SellerController {
                     if (throwable.getCause() instanceof SellerNotFoundException) {
                         return ResponseEntity.<Seller>notFound().build();
                     }
-                    logError("Error updating seller", throwable);
+                    persistence.writeIntoLogger("Error Updating seller on Save Data", Level.WARNING);
                     return ResponseEntity.<Seller>internalServerError().build();
                 });
     }
@@ -116,12 +115,9 @@ public class SellerController {
                     ResponseEntity.ok().body("Seller deleted successfully ;D") : 
                     ResponseEntity.<String>notFound().build())
                 .exceptionally(throwable -> {
-                    logError("Error deleting seller", throwable);
+                    persistence.writeIntoLogger("Error Deleting seller on Delete Button ", Level.WARNING);
                     return ResponseEntity.<String>internalServerError().build();
                 });
     }
 
-    private void logError(String message, Throwable throwable) {
-        log.error(message, throwable);
-    }
 }

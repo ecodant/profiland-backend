@@ -2,14 +2,13 @@ package co.profiland.co.service;
 
 
 import org.springframework.stereotype.Service;
+
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import co.profiland.co.components.ThreadPoolManager;
-import co.profiland.co.exception.BackupException;
-import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.exception.ProductNotFound;
 import co.profiland.co.model.Product;
 import co.profiland.co.model.State;
@@ -27,13 +26,9 @@ public class ProductService {
     private final ThreadPoolManager threadPool = ThreadPoolManager.getInstance();
     private final Utilities persistence = Utilities.getInstance();
     public ProductService() {
-        try {
-            persistence.initializeFile(AVAILABLE_PATH, new ArrayList<Product>());
-            persistence.initializeFile(SOLD_PATH, new ArrayList<Product>());
-            persistence.initializeFile(PUBLISHED_PATH, new ArrayList<Product>());
-        } catch (BackupException | PersistenceException e) {
-            e.printStackTrace();
-        }
+        persistence.initializeFile(AVAILABLE_PATH, new ArrayList<Product>());
+        persistence.initializeFile(SOLD_PATH, new ArrayList<Product>());
+        persistence.initializeFile(PUBLISHED_PATH, new ArrayList<Product>());
         Utilities.setupLogger(LOG_PATH); 
     }
 
@@ -102,13 +97,13 @@ public class ProductService {
                 if (product.getId().equals(id)) {
                     updatedProduct.setId(id);
                     moveProductBetweenLists(updatedProduct);
+                    // System.out.println("Product Updated " + updatedProduct);
                     return updatedProduct;
                 }
             }
             try {
                 throw new ProductNotFound("Product with ID " + id + " not found");
             } catch (ProductNotFound e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             return updatedProduct;
@@ -130,7 +125,16 @@ public class ProductService {
                 moveProduct(PUBLISHED_PATH, SOLD_PATH, product);
                 break;
             case AVAILABLE:
-                // No need to move for available state
+                List<Product> availableProducts = getProductsList(AVAILABLE_PATH);
+
+                for (int i = 0; i < availableProducts.size(); i++) {
+                    if (availableProducts.get(i).getId().equals(product.getId())) {
+                        // product.setId();
+                        availableProducts.set(i, product); 
+                        persistence.serializeObject(AVAILABLE_PATH, availableProducts);
+                    }
+                }
+                
                 break;
             default:
                 persistence.writeIntoLogger("Invalid product state: " + state, Level.WARNING);
@@ -193,8 +197,12 @@ public class ProductService {
     // Fetch products from a given path
     @SuppressWarnings("unchecked")
     private List<Product> getProductsList(String path) {
-        Object data = persistence.deserializeObject(path);
-        return (data instanceof List<?>) ? (List<Product>) data : new ArrayList<>();
+        Object data;
+        data = persistence.deserializeObject(path);
+        if (data instanceof List<?>) {
+            return (List<Product>) data; 
+        }
+        return  new ArrayList<>();
     }
 
     public CompletableFuture<List<Product>> findProductsByName(String name) {

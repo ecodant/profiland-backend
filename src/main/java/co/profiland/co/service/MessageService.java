@@ -21,11 +21,7 @@ public class MessageService {
     private final Utilities persistence = Utilities.getInstance();
 
     public MessageService() {
-        try {
-            persistence.initializeFile(XML_PATH, new ArrayList<Message>());
-        } catch (BackupException | PersistenceException e) {
-            e.printStackTrace();
-        }
+        persistence.initializeFile(XML_PATH, new ArrayList<Message>());
     }
 
     public Message saveMessage(Message message) throws IOException, ClassNotFoundException {

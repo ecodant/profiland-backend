@@ -8,8 +8,6 @@ import java.util.concurrent.CompletableFuture;
 
 import java.util.logging.Level;
 import co.profiland.co.components.ThreadPoolManager;
-import co.profiland.co.exception.BackupException;
-import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.model.Wall;
 import co.profiland.co.utils.Utilities;
 
@@ -23,11 +21,7 @@ public class WallService {
     public WallService(Utilities persistence) {
         this.persistence = persistence;
         this.threadPool = ThreadPoolManager.getInstance();
-        try {
             persistence.initializeFile(XML_PATH, new ArrayList<Wall>());
-        } catch (BackupException | PersistenceException e) {
-            e.printStackTrace();
-        }
     }
 
     public CompletableFuture<Wall> createWall(Wall wall) {

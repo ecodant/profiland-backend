@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import co.profiland.co.components.ThreadPoolManager;
-import co.profiland.co.exception.BackupException;
-import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.model.Review;
 import co.profiland.co.utils.Utilities;
 
@@ -25,11 +23,7 @@ public class ReviewService {
     public ReviewService(Utilities persistence) {
         this.persistence = persistence;
         this.threadPool = ThreadPoolManager.getInstance();
-        try {
-            persistence.initializeFile(XML_PATH, new ArrayList<Review>());
-        } catch (BackupException | PersistenceException e) {
-            e.printStackTrace();
-        }
+        persistence.initializeFile(XML_PATH, new ArrayList<Review>());
     }
 
     public CompletableFuture<Review> createReview(Review review) {

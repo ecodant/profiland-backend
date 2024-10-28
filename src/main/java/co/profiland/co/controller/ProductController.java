@@ -40,7 +40,6 @@ public class ProductController {
                 });
     }
 
-    // Update Product by ID
     @PutMapping("/{id}")
     public CompletableFuture<ResponseEntity<Product>> updateProduct(
             @PathVariable String id, @RequestBody Product product) {

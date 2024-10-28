@@ -3,9 +3,7 @@ package co.profiland.co.utils;
 import java.io.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import co.profiland.co.components.ThreadPoolManager;
-import co.profiland.co.exception.BackupException;
 import co.profiland.co.exception.LogException;
-import co.profiland.co.exception.PersistenceException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +11,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import org.springframework.stereotype.Component;
 import java.util.logging.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 @Component
@@ -23,7 +23,10 @@ public class Utilities implements Serializable {
     private final ThreadPoolManager threadPool;
     private static FileHandler fileHandler;
     private static Utilities instance;
-    
+       private static final String DEFAULT_BACKUP_PATH = "C:/td/persistence/backup/";
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = 
+        DateTimeFormatter.ofPattern("dd-MM-yyyy_HH_mm_ss");
+
     private Utilities() {
         this.threadPool = ThreadPoolManager.getInstance();
     }
@@ -70,90 +73,69 @@ public class Utilities implements Serializable {
             return false;
         }
     }
+    public void initializeFile(String path, Object obj) {
+        if (path == null || obj == null) {
+            throw new IllegalArgumentException("Path and object cannot be null");
+        }
 
-    public boolean initializeFile(String pathcito, Object obj) throws BackupException, PersistenceException {
-        File file = new File(pathcito);
-        if (file.exists()) {
-            return backupFile(file) && serializeObject(pathcito, obj);
-        } else {
-            try {
-                if (!file.getParentFile().mkdirs() && !file.getParentFile().exists()) {
-                    logger.log(Level.SEVERE, "Failed to create directory structure");
-                    return false;
-                }
-                return serializeObject(pathcito, obj);
-            } catch (SecurityException e) {
-                logger.log(Level.SEVERE, "Security violation during file initialization: " + e.getMessage());
-                return false;
+        File file = new File(path);
+        try {
+            if (file.exists()) {
+                backupFile(file);
+            } else {
+                createNewFile(file, obj);
             }
+        } catch (Exception e) {
+            throw new RuntimeException("File initialization failed", e);
         }
     }
 
-    private boolean backupFile(File file) {
-        String customPathForTheBackUp = "C:/td/persistence/backup/";
-        String originalFileName = file.getName();
+    private void createNewFile(File file, Object obj) throws IOException {
+        Files.createDirectories(file.getParentFile().toPath());
+        serializeObject(file.getPath(), obj);
+    }
+
+
+    private void backupFile(File file) throws IOException {
+        String fileName = file.getName();
         String fileExtension = "";
-        String fileNameWithoutExtension = originalFileName;
+        String nameWithoutExt = fileName;
 
-        int lastDotIndex = originalFileName.lastIndexOf('.');
-        if (lastDotIndex > 0) {
-            fileExtension = originalFileName.substring(lastDotIndex);
-            fileNameWithoutExtension = originalFileName.substring(0, lastDotIndex);
+        int lastDot = fileName.lastIndexOf('.');
+        if (lastDot > 0) {
+            fileExtension = fileName.substring(lastDot);
+            nameWithoutExt = fileName.substring(0, lastDot);
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        String timestamp = now.format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HH_mm_ss"));
+        String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMATTER);
+        String backupFileName = String.format("%s_%s%s", nameWithoutExt, timestamp, fileExtension);
         
-        String backupFileName = String.format("%s_%s%s", fileNameWithoutExtension, timestamp, fileExtension);
-        String backupPath = customPathForTheBackUp != null ? customPathForTheBackUp : file.getParent();
-        String fullBackupPath = backupPath + File.separator + backupFileName;
-        
-        File backupFile = new File(fullBackupPath);
+        Path backupPath = Paths.get(DEFAULT_BACKUP_PATH, backupFileName);
         try {
-            Files.createDirectories(backupFile.getParentFile().toPath());
-            Files.copy(file.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            logger.log(Level.INFO, "Backup created: " + fullBackupPath);
-            return true;
+            Files.createDirectories(backupPath.getParent());
+            Files.copy(file.toPath(), backupPath, StandardCopyOption.REPLACE_EXISTING);
+            // log.info("Created backup at: {}", backupPath);
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to create backup file: " + e.getMessage());
-            return false;
-        } catch (SecurityException e) {
-            logger.log(Level.SEVERE, "Security violation while creating backup: " + e.getMessage());
-            return false;
+            // log.error("Failed to create backup at: " + backupPath, e);
+            throw e;
         }
     }
 
-    public boolean serializeObject(String filePath, Object object) {
+ 
+    public void serializeObject(String filePath, Object object) {
         ReadWriteLock lock = threadPool.getLockForFile(filePath);
-        boolean lockAcquired = false;
-        
+        lock.writeLock().lock();
         try {
-            try {
-                lock.writeLock().lock();
-                lockAcquired = true;
-                
-                try (ObjectOutputStream exit = new ObjectOutputStream(new FileOutputStream(filePath))) {
-                    exit.writeObject(object);
-                    return true;
-                } catch (FileNotFoundException e) {
-                    logger.log(Level.SEVERE, "File not found for serialization: " + e.getMessage());
-                    return false;
-                }
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "IO error during serialization: " + e.getMessage());
-                return false;
+            try (ObjectOutputStream oos = new ObjectOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(filePath)))) {
+                oos.writeObject(object);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         } finally {
-            if (lockAcquired) {
-                try {
-                    lock.writeLock().unlock();
-                } catch (Exception e) {
-                    logger.log(Level.WARNING, "Error releasing write lock: " + e.getMessage());
-                }
-            }
+            lock.writeLock().unlock();
         }
     }
-    
     public Object deserializeObject(String filePath) {
         ReadWriteLock lock = threadPool.getLockForFile(filePath);
         boolean lockAcquired = false;
@@ -186,7 +168,6 @@ public class Utilities implements Serializable {
             }
         }
     }
-
     // Convert any object to JSON string
     public String convertToJson(Object object) throws IOException {
         ObjectMapper mapper = new ObjectMapper();

@@ -10,9 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 import co.profiland.co.components.ThreadPoolManager;
-import co.profiland.co.exception.BackupException;
 import co.profiland.co.exception.InvalidCredentials;
-import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.exception.SellerNotFoundException;
 import co.profiland.co.model.Seller;
 import java.util.stream.Collectors;
@@ -27,16 +25,8 @@ public class SellerService {
     private final Utilities persistence = Utilities.getInstance();
 
     public SellerService() {
-        try {
-            persistence.initializeFile(XML_PATH, new ArrayList<Seller>());
-        } catch (BackupException | PersistenceException e) {
-            e.printStackTrace();
-        }
-        try {
-            persistence.initializeFile(DAT_PATH, new ArrayList<Seller>());
-        } catch (BackupException | PersistenceException e) {
-            e.printStackTrace();
-        }
+        persistence.initializeFile(XML_PATH, new ArrayList<Seller>());
+        persistence.initializeFile(DAT_PATH, new ArrayList<Seller>());
         Utilities.setupLogger(LOG_PATH);
     }
 

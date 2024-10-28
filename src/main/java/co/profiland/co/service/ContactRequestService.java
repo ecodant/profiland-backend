@@ -2,14 +2,13 @@ package co.profiland.co.service;
 
 
 import org.springframework.stereotype.Service;
+
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import co.profiland.co.components.ThreadPoolManager;
-import co.profiland.co.exception.BackupException;
-import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.exception.RequestNotFoundException;
 import co.profiland.co.model.ContactRequest;
 import co.profiland.co.model.StateRequest;
@@ -28,13 +27,9 @@ public class ContactRequestService {
     private final Utilities persistence = Utilities.getInstance();
 
     public ContactRequestService() {
-        try {
-            persistence.initializeFile(ON_HOLD_PATH, new ArrayList<ContactRequest>());
-            persistence.initializeFile(ACCEPTED_PATH, new ArrayList<ContactRequest>());
-            persistence.initializeFile(REJECTED_PATH, new ArrayList<ContactRequest>());
-        } catch (BackupException | PersistenceException e) {
-            e.printStackTrace();
-        }
+        persistence.initializeFile(ON_HOLD_PATH, new ArrayList<ContactRequest>());
+        persistence.initializeFile(ACCEPTED_PATH, new ArrayList<ContactRequest>());
+        persistence.initializeFile(REJECTED_PATH, new ArrayList<ContactRequest>());
         Utilities.setupLogger(LOG_PATH);
     }
 
@@ -133,7 +128,14 @@ public class ContactRequestService {
                 moveRequest(ON_HOLD_PATH, REJECTED_PATH, request);
                 break;
             case ON_HOLD:
-                // No need to move for on hold state
+                List<ContactRequest> onHoldRequests = getRequestsList(ON_HOLD_PATH);
+
+                for (int i = 0; i < onHoldRequests.size(); i++) {
+                    if (onHoldRequests.get(i).getId().equals(request.getId())) {
+                        onHoldRequests.set(i, request); 
+                        persistence.serializeObject(ON_HOLD_PATH, onHoldRequests);
+                    }
+                }
                 break;
             default:
                 persistence.writeIntoLogger("Invalid request state: " + state, Level.WARNING);
@@ -155,7 +157,6 @@ public class ContactRequestService {
         }
     }
 
-    // Delete a contact request by ID
     public CompletableFuture<Boolean> deleteRequest(String id) {
         return findRequestById(id).thenApply(request -> {
             boolean deleted;
@@ -183,7 +184,6 @@ public class ContactRequestService {
         });
     }
 
-    // Helper to delete from a specific list
     private boolean deleteFromList(String path, String id) {
         List<ContactRequest> requests = getRequestsList(path);
         boolean removed = requests.removeIf(r -> r.getId().equals(id));
@@ -197,8 +197,12 @@ public class ContactRequestService {
     // Fetch requests from a given path
     @SuppressWarnings("unchecked")
     private List<ContactRequest> getRequestsList(String path) {
-        Object data = persistence.deserializeObject(path);
-        return (data instanceof List<?>) ? (List<ContactRequest>) data : new ArrayList<>();
+        Object data;
+        data = persistence.deserializeObject(path);
+        if (data instanceof List<?>){
+            return (List<ContactRequest>) data;
+        }
+        return new ArrayList<>();
     }
 
     // Find requests by emisor ID

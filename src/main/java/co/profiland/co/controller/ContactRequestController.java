@@ -1,6 +1,5 @@
 package co.profiland.co.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +16,6 @@ public class ContactRequestController {
 
     private final ContactRequestService contactRequestService;
 
-    @Autowired
     public ContactRequestController(ContactRequestService contactRequestService) {
         this.contactRequestService = contactRequestService;
     }
