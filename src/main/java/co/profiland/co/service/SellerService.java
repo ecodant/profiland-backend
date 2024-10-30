@@ -65,15 +65,26 @@ public class SellerService {
         });
     }
 
-    public CompletableFuture<Seller> updateSeller(String id, Seller updatedSeller, String format) {
+    public CompletableFuture<Seller> updateSeller(String id, Seller updatedSeller) {
         return threadPool.submitTask(() -> {
-            List<Seller> sellers = getAllSellers(format);
+            List<Seller> sellersDat = getAllSellers("dat");
+            List<Seller> sellersXML= getAllSellers("xml");
             
-            for (int i = 0; i < sellers.size(); i++) {
-                if (sellers.get(i).getId().equals(id)) {
+            for (int i = 0; i < sellersDat.size(); i++) {
+                if (sellersDat.get(i).getId().equals(id)) {
                     updatedSeller.setId(id);
-                    sellers.set(i, updatedSeller);
-                    serializeSellers(format, sellers);
+                    sellersDat.set(i, updatedSeller);
+                    serializeSellers("dat", sellersDat);
+                    //Log Requirement - Second Delivery
+                    persistence.writeIntoLogger("Seller with ID " + updatedSeller.getId() + " updated its data",Level.FINE);
+                    return updatedSeller;
+                }
+            }
+            for (int i = 0; i < sellersXML.size(); i++) {
+                if (sellersXML.get(i).getId().equals(id)) {
+                    updatedSeller.setId(id);
+                    sellersXML.set(i, updatedSeller);
+                    serializeSellers("xml", sellersXML);
                     //Log Requirement - Second Delivery
                     persistence.writeIntoLogger("Seller with ID " + updatedSeller.getId() + " updated its data",Level.FINE);
                     return updatedSeller;
@@ -117,9 +128,9 @@ public class SellerService {
                                 return seller;
                             } else {
                                 try {
-                                    throw new InvalidCredentials("Invalid password for email: " + email);
+                                    throw new InvalidCredentials("Invalid password for email in the Login UI: " + email);
                                 } catch (InvalidCredentials e) {
-                                    persistence.writeIntoLogger("Invalid Authentication", Level.WARNING);
+                                    persistence.writeIntoLogger("Invalid Authentication in the Login UI", Level.WARNING);
                                     e.printStackTrace();
                                 }
                             }
@@ -165,7 +176,7 @@ public class SellerService {
 
     public CompletableFuture<Seller> findSellerById(String id) {
 
-        persistence.writeIntoLogger("Searching Seller by the ID " + id, Level.INFO);
+        persistence.writeIntoLogger("Searching Seller by the ID in the Home Page" + id, Level.INFO);
         return getAllSellersMerged()
             .thenApply(sellers -> {
                 try {

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import co.profiland.co.exception.ProductNotFound;
 import co.profiland.co.model.Product;
 import co.profiland.co.service.ProductService;
+import co.profiland.co.service.SellerService;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -14,9 +15,11 @@ import java.util.concurrent.CompletableFuture;
 public class ProductController {
 
     private final ProductService productService;
+    private final SellerService sellerService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, SellerService sellerService) {
         this.productService = productService;
+        this.sellerService = sellerService;
     }
 
     // Save a Product

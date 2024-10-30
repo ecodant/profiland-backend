@@ -94,9 +94,8 @@ public class SellerController {
     @PutMapping("/{id}")
     public CompletableFuture<ResponseEntity<Seller>> updateSeller(
             @PathVariable String id,
-            @RequestBody Seller seller,
-            @RequestParam(name = "format", required = false, defaultValue = "dat") String format) {
-        return sellerService.updateSeller(id, seller, format)
+            @RequestBody Seller seller, String format) {
+        return sellerService.updateSeller(id, seller)
                 .thenApply(ResponseEntity::ok)
                 .exceptionally(throwable -> {
                     if (throwable.getCause() instanceof SellerNotFoundException) {

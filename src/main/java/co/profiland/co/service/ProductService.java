@@ -32,7 +32,6 @@ public class ProductService {
         Utilities.setupLogger(LOG_PATH); 
     }
 
-    // Save a product and log the operation
     public CompletableFuture<Product> saveProductOnList(Product product) {
         return threadPool.submitTask(() -> {
             List<Product> products = getProductsList(AVAILABLE_PATH);
@@ -50,12 +49,11 @@ public class ProductService {
 
             return product;
         }).exceptionally(ex -> {
-            persistence.writeIntoLogger("Error saving product", Level.SEVERE);
+            persistence.writeIntoLogger("Error saving product in the Products Section Tab", Level.SEVERE);
             throw new RuntimeException("Failed to save product", ex);
         });
     }
 
-    // Fetch all products (merged from all lists)
     public CompletableFuture<List<Product>> getAllProducts() {
         return threadPool.submitTask(() -> {
             List<Product> mergedList = new ArrayList<>();
@@ -70,7 +68,6 @@ public class ProductService {
         });
     }
 
-    // Find a product by ID
     public CompletableFuture<Product> findProductById(String id) {
         return getAllProducts().thenApply(products -> 
             {
@@ -85,12 +82,12 @@ public class ProductService {
                 return null;
             }
         ).exceptionally(ex -> {
-            persistence.writeIntoLogger("Error finding product by ID: " + id, Level.WARNING);
+            persistence.writeIntoLogger("Error finding product in the Tab Product section, ID of the product: " + id, Level.WARNING);
             return null;
         });
     }
 
-    // Update product and handle state transition
+    // Update handle state transition
     public CompletableFuture<Product> updateProduct(String id, Product updatedProduct) {
         return getAllProducts().thenApply(products -> {
             for (Product product : products) {
@@ -108,7 +105,7 @@ public class ProductService {
             }
             return updatedProduct;
         }).exceptionally(ex -> {
-            persistence.writeIntoLogger("Error updating product", Level.SEVERE);
+            persistence.writeIntoLogger("Error updating product in the products Section UI", Level.SEVERE);
             throw new RuntimeException("Failed to update product", ex);
         });
     }
@@ -125,6 +122,7 @@ public class ProductService {
                 moveProduct(PUBLISHED_PATH, SOLD_PATH, product);
                 break;
             case AVAILABLE:
+            // This case is for handle when the user don't change the initial state
                 List<Product> availableProducts = getProductsList(AVAILABLE_PATH);
 
                 for (int i = 0; i < availableProducts.size(); i++) {
@@ -142,7 +140,6 @@ public class ProductService {
         }
     }
 
-    // Move product between two lists and serialize them
     private void moveProduct(String fromPath, String toPath, Product product) {
         List<Product> fromList = getProductsList(fromPath);
         List<Product> toList = getProductsList(toPath);
@@ -156,7 +153,6 @@ public class ProductService {
         }
     }
 
-    // Delete a product by ID
     public CompletableFuture<Boolean> deleteProduct(String id) {
         return findProductById(id).thenApply(product -> {
             boolean deleted;
@@ -194,7 +190,7 @@ public class ProductService {
         return removed;
     }
 
-    // Fetch products from a given path
+    // Get products from a given path
     @SuppressWarnings("unchecked")
     private List<Product> getProductsList(String path) {
         Object data;

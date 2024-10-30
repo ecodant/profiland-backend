@@ -1,6 +1,7 @@
 package co.profiland.co.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,10 +22,11 @@ public class Seller implements Serializable {
     private String profileImg;
     
     // Reference fields to other entities (Avoiding nested objects)
-    private Set<String> reviews;
+    private ArrayList<Review> reviews;
+    // private Set<String> reviews;
     private Set<String> contacts;
     private Set<String> products;
-    private Set <String> stats;
+    private Set<String> stats;
     private Set<String> chats;
     private Set<String> contactRequests;
     private Wall wall;
@@ -36,7 +38,7 @@ public class Seller implements Serializable {
         this.chats = new HashSet<>();
     }
 
-    public Seller(String name, String lastName,String email,String password, String license, String address, String profileImg, Set<String> reviews, Set<String> contacts, Set<String> products, Set<String> stats, Set<String> chats, Set<String> contactRequests, Wall wall) {
+    public Seller(String name, String lastName,String email,String password, String license, String address, String profileImg, ArrayList<Review> reviews, Set<String> contacts, Set<String> products, Set<String> stats, Set<String> chats, Set<String> contactRequests, Wall wall) {
         this.name = name;
         this.email = email;
         this.password = password;
@@ -44,7 +46,7 @@ public class Seller implements Serializable {
         this.license = license;
         this.address = address;
         this.profileImg = profileImg != null ? profileImg: "";
-        this.reviews = reviews != null ? reviews : new HashSet<>();
+        this.reviews = reviews != null ? reviews : new ArrayList<Review>();
         this.contacts = contacts != null ? contacts : new HashSet<>();
         this.products = products != null ? products : new HashSet<>();
         this.stats = stats;
@@ -54,7 +56,7 @@ public class Seller implements Serializable {
     }
 
     public Seller(String name, String email, String password, String lastName, String license, String address, String profileImg, List<Stadistic> stats, Wall wall) {
-        this(name, email, password, lastName, license, address, profileImg, new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), wall);
+        this(name, email, password, lastName, license, address, profileImg, new ArrayList<Review>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), wall);
     }
 
     public boolean addContact(String contactId) {

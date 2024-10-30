@@ -34,7 +34,7 @@ public class ContactRequestService {
     }
 
     // Save a contact request and log the operation
-    public CompletableFuture<ContactRequest> saveContactRequest(ContactRequest request) {
+    public CompletableFuture<Boolean> saveContactRequest(ContactRequest request) {
         return threadPool.submitTask(() -> {
             List<ContactRequest> requests = getRequestsList(ON_HOLD_PATH);
 
@@ -49,19 +49,18 @@ public class ContactRequestService {
             requests.add(request);
             persistence.serializeObject(ON_HOLD_PATH, requests);
             persistence.writeIntoLogger(
-                String.format("Contact request from '%s' to '%s' was saved", 
+                String.format("Contact request from '%s' to '%s' was saved - Home Section UI Friends Suggestion UI", 
                     request.getIdEmisor(), request.getIdReciver()),
                 Level.INFO
             );
 
-            return request;
+            return true;
         }).exceptionally(ex -> {
-            persistence.writeIntoLogger("Error saving contact request", Level.SEVERE);
+            persistence.writeIntoLogger("Error saving contact request - Home Friends Suggestion UI", Level.SEVERE);
             throw new RuntimeException("Failed to save contact request", ex);
         });
     }
 
-    // Fetch all contact requests
     public CompletableFuture<List<ContactRequest>> getAllRequests() {
         return threadPool.submitTask(() -> {
             List<ContactRequest> mergedList = new ArrayList<>();

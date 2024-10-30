@@ -20,8 +20,9 @@ public class ContactRequestController {
         this.contactRequestService = contactRequestService;
     }
 
+
     @PostMapping("/")
-    public CompletableFuture<ResponseEntity<ContactRequest>> createContactRequest(@RequestBody ContactRequest request) {
+    public CompletableFuture<ResponseEntity<Boolean>> createContactRequest(@RequestBody ContactRequest request) {
         return contactRequestService.saveContactRequest(request)
             .thenApply(ResponseEntity::ok)
             .exceptionally(ex -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());

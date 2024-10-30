@@ -36,7 +36,7 @@ public class ReviewService {
             reviews.add(review);
 
             persistence.serializeObject(XML_PATH, reviews);
-            persistence.writeIntoLogger("Review with ID " + review.getId() + " was created", Level.FINE);
+            persistence.writeIntoLogger("Review with ID " + review.getId() + " was created - Products UI Section", Level.FINE);
             return review;
         });
     }
@@ -62,11 +62,11 @@ public class ReviewService {
                     updatedReview.setId(id);
                     reviews.set(i, updatedReview);
                     persistence.serializeObject(XML_PATH, reviews);
-                    persistence.writeIntoLogger("Review with ID " + id + " was updated", Level.FINE);
+                    persistence.writeIntoLogger("Review with ID " + id + " was updated - Profile UI Section", Level.FINE);
                     return updatedReview;
                 }
             }
-            persistence.writeIntoLogger("Review with ID " + id + " not found for update", Level.WARNING);
+            persistence.writeIntoLogger("Review with ID " + id + " not found for update - Profile UI Section", Level.WARNING);
             return null;
         });
     }
@@ -78,9 +78,9 @@ public class ReviewService {
 
             if (removed) {
                 persistence.serializeObject(XML_PATH, reviews);
-                persistence.writeIntoLogger("Review with ID " + id + " was deleted", Level.FINE);
+                persistence.writeIntoLogger("Review with ID " + id + " was deleted - Profile UI Section", Level.FINE);
             } else {
-                persistence.writeIntoLogger("Review with ID " + id + " not found for deletion", Level.WARNING);
+                persistence.writeIntoLogger("Review with ID " + id + " not found for deletion - Profile UI Section", Level.WARNING);
             }
 
             return removed;
