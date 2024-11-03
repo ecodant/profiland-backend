@@ -32,6 +32,7 @@ public class ProductService {
         Utilities.setupLogger(LOG_PATH); 
     }
 
+    
     public CompletableFuture<Product> saveProductOnList(Product product) {
         return threadPool.submitTask(() -> {
             List<Product> products = getProductsList(AVAILABLE_PATH);
@@ -54,6 +55,7 @@ public class ProductService {
         });
     }
 
+    
     public CompletableFuture<List<Product>> getAllProducts() {
         return threadPool.submitTask(() -> {
             List<Product> mergedList = new ArrayList<>();
@@ -67,6 +69,56 @@ public class ProductService {
             return new ArrayList<>();
         });
     }
+
+public CompletableFuture<Object> organizeAndSerializeProducts(List<Product> products) {
+    return threadPool.submitTask(() -> {
+        // Initialize empty lists for each state
+        List<Product> availableProducts = new ArrayList<>();
+        List<Product> soldProducts = new ArrayList<>();
+        List<Product> publishedProducts = new ArrayList<>();
+
+        // Categorize products based on their state
+        if (products != null && !products.isEmpty()) {
+            for (Product product : products) {
+                switch (product.getState()) {
+                    case AVAILABLE:
+                        availableProducts.add(product);
+                        break;
+                    case SOLD:
+                        soldProducts.add(product);
+                        break;
+                    case PUBLISHED:
+                        publishedProducts.add(product);
+                        break;
+                    default:
+                        persistence.writeIntoLogger(
+                            "Invalid product state found for product ID: " + product.getId(),
+                            Level.WARNING
+                        );
+                }
+            }
+        }
+
+        // Serialize all lists, regardless of whether they're empty or not
+        persistence.serializeObject(AVAILABLE_PATH, availableProducts);
+        persistence.serializeObject(SOLD_PATH, soldProducts);
+        persistence.serializeObject(PUBLISHED_PATH, publishedProducts);
+
+        persistence.writeIntoLogger(
+            String.format("Products organized and serialized - Available: %d, Sold: %d, Published: %d",
+                availableProducts.size(),
+                soldProducts.size(),
+                publishedProducts.size()
+            ),
+            Level.INFO
+        );
+
+        return null;
+    }).exceptionally(ex -> {
+        persistence.writeIntoLogger("Error organizing and serializing products", Level.SEVERE);
+        throw new RuntimeException("Failed to organize and serialize products", ex);
+    });
+}
 
     public CompletableFuture<Product> findProductById(String id) {
         return getAllProducts().thenApply(products -> 

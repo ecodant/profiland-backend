@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import co.profiland.co.components.ThreadPoolManager;
 import co.profiland.co.exception.InvalidCredentials;
 import co.profiland.co.exception.SellerNotFoundException;
+import co.profiland.co.model.Review;
 import co.profiland.co.model.Seller;
 import java.util.stream.Collectors;
 
@@ -20,13 +21,18 @@ public class SellerService {
 
     private final String XML_PATH ="C:/td/persistence/models/sellers/sellers.xml";
     private final String DAT_PATH ="C:/td/persistence/models/sellers/sellers.dat";
+    private final String REVIEWS_PATH ="C:/td/persistence/models/reviews/reviews.xml";
+    private final String CHATS_PATH ="C:/td/persistence/models/chats/chats.xml";
     private final String LOG_PATH ="C:/td/persistence/log/Profiland_Log.log";
     private final ThreadPoolManager threadPool = ThreadPoolManager.getInstance();
     private final Utilities persistence = Utilities.getInstance();
+    private final ProductService productService = new ProductService();
+    private final ContactRequestService contactRequestService = new ContactRequestService();
 
     public SellerService() {
         persistence.initializeFile(XML_PATH, new ArrayList<Seller>());
         persistence.initializeFile(DAT_PATH, new ArrayList<Seller>());
+        persistence.initializeFile(REVIEWS_PATH, new ArrayList<Review>());
         Utilities.setupLogger(LOG_PATH);
     }
 
@@ -73,8 +79,16 @@ public class SellerService {
             for (int i = 0; i < sellersDat.size(); i++) {
                 if (sellersDat.get(i).getId().equals(id)) {
                     updatedSeller.setId(id);
-                    sellersDat.set(i, updatedSeller);
-                    serializeSellers("dat", sellersDat);
+
+                    //Updates the products and Request by its state 
+                    productService.organizeAndSerializeProducts(updatedSeller.getProducts());
+                    contactRequestService.organizeAndSerializeRequests(updatedSeller.getContactRequests());
+
+                    persistence.serializeObject(REVIEWS_PATH, updatedSeller.getReviews());
+                    persistence.serializeObject(CHATS_PATH, updatedSeller.getChats());
+
+                    sellersXML.set(i, updatedSeller);
+                    serializeSellers("xml", sellersXML);
                     //Log Requirement - Second Delivery
                     persistence.writeIntoLogger("Seller with ID " + updatedSeller.getId() + " updated its data",Level.FINE);
                     return updatedSeller;
@@ -83,6 +97,15 @@ public class SellerService {
             for (int i = 0; i < sellersXML.size(); i++) {
                 if (sellersXML.get(i).getId().equals(id)) {
                     updatedSeller.setId(id);
+
+                    //Updates the products and Request by its state 
+                    productService.organizeAndSerializeProducts(updatedSeller.getProducts());
+                    contactRequestService.organizeAndSerializeRequests(updatedSeller.getContactRequests());
+
+                    persistence.serializeObject(REVIEWS_PATH, updatedSeller.getReviews());
+                    persistence.serializeObject(CHATS_PATH, updatedSeller.getChats());
+
+                    
                     sellersXML.set(i, updatedSeller);
                     serializeSellers("xml", sellersXML);
                     //Log Requirement - Second Delivery
@@ -90,7 +113,7 @@ public class SellerService {
                     return updatedSeller;
                 }
             }
-            //Custom Exeption from the first delivery (The UI and all that stuff)
+            //Custom Exeption from the second delivery (The UI and all that stuff)
             throw new SellerNotFoundException("Seller with id " + id + " not found");
         });
     }

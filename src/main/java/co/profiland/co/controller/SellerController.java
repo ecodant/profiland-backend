@@ -53,13 +53,10 @@ public class SellerController {
     }
 
     @GetMapping("/")
-    public CompletableFuture<ResponseEntity<String>> getAllSellers() {
+    public CompletableFuture<ResponseEntity<List<Seller>>> getAllSellers() {
         return sellerService.getAllSellersMerged()
-                .thenCompose(sellers -> sellerService.convertToJson(sellers))
-                .thenApply(jsonString -> ResponseEntity.ok().body(jsonString))
-                .exceptionally(throwable -> {
-                    return ResponseEntity.internalServerError().build();
-                });
+                .thenApply(ResponseEntity::ok)
+                .exceptionally(throwable -> ResponseEntity.internalServerError().build());
     }
 
     @SuppressWarnings("unused")

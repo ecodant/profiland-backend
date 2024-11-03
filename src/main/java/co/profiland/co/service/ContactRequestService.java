@@ -43,14 +43,14 @@ public class ContactRequestService {
             }
             
             if (request.getState() == null) {
-                request.setState(StateRequest.ON_HOLD.toString());
+                request.setState(StateRequest.ON_HOLD);
             }
 
             requests.add(request);
             persistence.serializeObject(ON_HOLD_PATH, requests);
             persistence.writeIntoLogger(
                 String.format("Contact request from '%s' to '%s' was saved - Home Section UI Friends Suggestion UI", 
-                    request.getIdEmisor(), request.getIdReciver()),
+                    request.getIdEmisor()),
                 Level.INFO
             );
 
@@ -60,6 +60,57 @@ public class ContactRequestService {
             throw new RuntimeException("Failed to save contact request", ex);
         });
     }
+
+
+    public CompletableFuture<Object> organizeAndSerializeRequests(List<ContactRequest> requests) {
+        return threadPool.submitTask(() -> {
+            // Initialize empty lists for each state
+            List<ContactRequest> onHoldRequests = new ArrayList<ContactRequest>();
+            List<ContactRequest> acceptedRequests = new ArrayList<ContactRequest>();
+            List<ContactRequest> rejectRequets = new ArrayList<ContactRequest>();
+            // Categorize products based on their state
+            if (requests != null && !requests.isEmpty()) {
+                for (ContactRequest request : requests) {
+                    switch (request.getState()) {
+                        case ON_HOLD:
+                            onHoldRequests.add(request);
+                            break;
+                        case ACCEPTED:
+                            acceptedRequests.add(request);
+                            break;
+                        case REJECTED:
+                            rejectRequets.add(request);
+                            break;
+                        default:
+                            persistence.writeIntoLogger(
+                                "Invalid contact Request state in the Notification Section.",
+                                Level.WARNING
+                            );
+                    }
+                }
+            }
+    
+            // Serialize all lists, regardless of whether they're empty or not
+            persistence.serializeObject(ON_HOLD_PATH, onHoldRequests);
+            persistence.serializeObject(ACCEPTED_PATH, acceptedRequests);
+            persistence.serializeObject(REJECTED_PATH, rejectRequets);
+    
+            persistence.writeIntoLogger(
+                String.format("Contact Requests organized and serialized - On Hold: %d, Accepted: %d, Rejected: %d",
+                    onHoldRequests.size(),
+                    acceptedRequests.size(),
+                    rejectRequets.size()
+                ),
+                Level.INFO
+            );
+    
+            return null;
+        }).exceptionally(ex -> {
+            persistence.writeIntoLogger("Error moving between serialized file the requests ", Level.SEVERE);
+            throw new RuntimeException("Failed to organize and serialize the contact request", ex);
+        });
+    }
+    
 
     public CompletableFuture<List<ContactRequest>> getAllRequests() {
         return threadPool.submitTask(() -> {
@@ -117,7 +168,7 @@ public class ContactRequestService {
 
     // Move requests between lists based on StateRequest enum
     private void moveRequestBetweenLists(ContactRequest request) {
-        StateRequest state = StateRequest.valueOf(request.getState());
+        StateRequest state = request.getState();
 
         switch (state) {
             case ACCEPTED:
@@ -159,7 +210,7 @@ public class ContactRequestService {
     public CompletableFuture<Boolean> deleteRequest(String id) {
         return findRequestById(id).thenApply(request -> {
             boolean deleted;
-            StateRequest state = StateRequest.valueOf(request.getState());
+            StateRequest state = request.getState();
 
             switch (state) {
                 case ACCEPTED:
@@ -216,15 +267,5 @@ public class ContactRequestService {
         });
     }
 
-    // Find requests by receiver ID
-    public CompletableFuture<List<ContactRequest>> findRequestsByReceiverId(String receiverId) {
-        return getAllRequests().thenApply(requests -> 
-            requests.stream()
-                    .filter(request -> request.getIdReciver().equals(receiverId))
-                    .collect(Collectors.toList())
-        ).exceptionally(ex -> {
-            persistence.writeIntoLogger("Error searching for requests by receiver ID: " + receiverId, Level.WARNING);
-            return new ArrayList<>();
-        });
-    }
+   
 }

@@ -81,20 +81,13 @@ public class ContactRequestController {
             .exceptionally(ex -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
     }
 
-    @GetMapping("/receiver/{receiverId}")
-    public CompletableFuture<ResponseEntity<List<ContactRequest>>> getRequestsByReceiverId(
-            @PathVariable String receiverId) {
-        return contactRequestService.findRequestsByReceiverId(receiverId)
-            .thenApply(ResponseEntity::ok)
-            .exceptionally(ex -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-    }
 
     @PutMapping("/{id}/accept")
     public CompletableFuture<ResponseEntity<? extends Object>> acceptRequest(@PathVariable String id) {
         return contactRequestService.findRequestById(id)
             .thenCompose(request -> {
                 if (request != null) {
-                    request.setState(StateRequest.ACCEPTED.toString());
+                    request.setState(StateRequest.ACCEPTED);
                     return contactRequestService.updateRequest(id, request);
                 }
                 return CompletableFuture.completedFuture(null);
@@ -113,7 +106,7 @@ public class ContactRequestController {
         return contactRequestService.findRequestById(id)
             .thenCompose(request -> {
                 if (request != null) {
-                    request.setState(StateRequest.REJECTED.toString());
+                    request.setState(StateRequest.REJECTED);
                     return contactRequestService.updateRequest(id, request);
                 }
                 return CompletableFuture.completedFuture(null);

@@ -22,7 +22,6 @@ public class Product implements Serializable {
     private ArrayList<Comment> comments;
     private Integer likes;
     private String sellerId;
-
     public Product(){
     }
 

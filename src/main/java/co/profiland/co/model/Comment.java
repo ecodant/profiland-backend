@@ -7,7 +7,6 @@ import lombok.Data;
 
 @Data
 public class Comment implements Serializable{
-    private String id;
     private String author;
     private String content;
     private LocalDateTime date;
@@ -16,8 +15,7 @@ public class Comment implements Serializable{
 
     }
 
-    public Comment(String id, String author, String content, LocalDateTime date){
-        this.id = id;
+    public Comment(String author, String content, LocalDateTime date){
         this.author = author;
         this.content = content;
         this.date= date;
