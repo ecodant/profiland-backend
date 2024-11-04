@@ -106,6 +106,7 @@ public class SellerController {
     @SuppressWarnings("unused")
     @DeleteMapping("/{id}")
     public CompletableFuture<ResponseEntity<? extends Object>> deleteSeller(@PathVariable String id) {
+
         return sellerService.deleteSeller(id)
                 .thenApply(deleted -> deleted ? 
                     ResponseEntity.ok().body("Seller deleted successfully ;D") : 
