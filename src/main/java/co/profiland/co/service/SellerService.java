@@ -22,7 +22,7 @@ public class SellerService {
     private final String XML_PATH ="C:/td/persistence/models/sellers/sellers.xml";
     private final String DAT_PATH ="C:/td/persistence/models/sellers/sellers.dat";
     private final String REVIEWS_PATH ="C:/td/persistence/models/reviews/reviews.xml";
-    private final String CHATS_PATH ="C:/td/persistence/models/chats/chats.xml";
+
     private final String LOG_PATH ="C:/td/persistence/log/Profiland_Log.log";
     private final ThreadPoolManager threadPool = ThreadPoolManager.getInstance();
     private final Utilities persistence = Utilities.getInstance();
@@ -85,7 +85,6 @@ public class SellerService {
                     contactRequestService.organizeAndSerializeRequests(updatedSeller.getContactRequests());
 
                     persistence.serializeObject(REVIEWS_PATH, updatedSeller.getReviews());
-                    persistence.serializeObject(CHATS_PATH, updatedSeller.getChats());
 
                     sellersXML.set(i, updatedSeller);
                     serializeSellers("xml", sellersXML);
@@ -103,7 +102,6 @@ public class SellerService {
                     contactRequestService.organizeAndSerializeRequests(updatedSeller.getContactRequests());
 
                     persistence.serializeObject(REVIEWS_PATH, updatedSeller.getReviews());
-                    persistence.serializeObject(CHATS_PATH, updatedSeller.getChats());
 
                     
                     sellersXML.set(i, updatedSeller);

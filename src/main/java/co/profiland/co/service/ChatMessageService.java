@@ -12,7 +12,7 @@ import co.profiland.co.utils.Utilities;
 @Service
 public class ChatMessageService {
 
-    private static final String XML_PATH = "C:/td/persistence/models/chatmessages/chatmessage.xml";
+    private static final String XML_PATH = "C:/td/persistence/models/chatmessages/chatmessage.dat";
     private final Utilities persistence;
     private final ThreadPoolManager threadPool;
 
