@@ -3,13 +3,19 @@ package co.profiland.co.utils;
 import java.io.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import co.profiland.co.components.ThreadPoolManager;
+import co.profiland.co.exception.BackupException;
+import co.profiland.co.exception.ExportException;
 import co.profiland.co.exception.LogException;
+import co.profiland.co.exception.PersistenceException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.locks.ReadWriteLock;
 import org.springframework.stereotype.Component;
 import java.util.logging.*;
+
+
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,7 +79,7 @@ public class Utilities implements Serializable {
             return false;
         }
     }
-    public void initializeFile(String path, Object obj) {
+    public void initializeFile(String path, Object obj) throws PersistenceException, BackupException {
         if (path == null || obj == null) {
             throw new IllegalArgumentException("Path and object cannot be null");
         }
@@ -85,18 +91,18 @@ public class Utilities implements Serializable {
             } else {
                 createNewFile(file, obj);
             }
-        } catch (Exception e) {
-            throw new RuntimeException("File initialization failed", e);
-        }
+        }catch (IOException e) {
+            throw new PersistenceException("File initialization failed", e);
+        } 
     }
 
-    private void createNewFile(File file, Object obj) throws IOException {
+    private void createNewFile(File file, Object obj) throws IOException, PersistenceException {
         Files.createDirectories(file.getParentFile().toPath());
         serializeObject(file.getPath(), obj);
     }
 
 
-    private void backupFile(File file) throws IOException {
+    private void backupFile(File file) throws IOException, BackupException {
         String fileName = file.getName();
         String fileExtension = "";
         String nameWithoutExt = fileName;
@@ -114,23 +120,21 @@ public class Utilities implements Serializable {
         try {
             Files.createDirectories(backupPath.getParent());
             Files.copy(file.toPath(), backupPath, StandardCopyOption.REPLACE_EXISTING);
-            // log.info("Created backup at: {}", backupPath);
         } catch (IOException e) {
-            // log.error("Failed to create backup at: " + backupPath, e);
-            throw e;
+            throw new BackupException("Failed to create backup", e);
         }
     }
 
  
-    public void serializeObject(String filePath, Object object) {
+    public void serializeObject(String filePath, Object object) throws PersistenceException {
         ReadWriteLock lock = threadPool.getLockForFile(filePath);
         lock.writeLock().lock();
         try {
             try (ObjectOutputStream oos = new ObjectOutputStream(
                     new BufferedOutputStream(new FileOutputStream(filePath)))) {
                 oos.writeObject(object);
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (IOException e) {
+                throw new PersistenceException("Failed to serialize object", e);
             }
         } finally {
             lock.writeLock().unlock();
@@ -168,9 +172,14 @@ public class Utilities implements Serializable {
             }
         }
     }
-    // Convert any object to JSON string
-    public String convertToJson(Object object) throws IOException {
+    //This method converts an object to JSON
+    public String convertToJson(Object object) throws ExportException {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(object);
+        try {
+            return mapper.writeValueAsString(object);
+        } catch (IOException e) {
+            throw new ExportException("Failed to convert object to JSON", e);
+        }
+        
     }
 }

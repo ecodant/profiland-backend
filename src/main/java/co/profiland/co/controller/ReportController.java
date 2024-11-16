@@ -16,7 +16,7 @@ import java.time.YearMonth;
 @RestController
 @RequestMapping("/profiland/reports")
 public class ReportController {
-    private static final String REPORTS_BASE_PATH = "C:/td/persistence/reports/";
+    private static final String REPORTS_BASE_PATH = "C:/td/persistence/files/reports/";
     private final ReportService reportService;
     private final SellerService sellerService;
     

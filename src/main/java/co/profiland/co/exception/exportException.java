@@ -1,7 +1,10 @@
 package co.profiland.co.exception;
 
-public class exportException extends Exception{
-    public exportException(String message){
+public class ExportException extends Exception{
+    public ExportException(String message){
+        super(message);
+    }
+    public ExportException(String message, Throwable cause){
         super(message);
     }
 }

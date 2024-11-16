@@ -10,7 +10,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 import co.profiland.co.components.ThreadPoolManager;
+import co.profiland.co.exception.BackupException;
 import co.profiland.co.exception.InvalidCredentials;
+import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.exception.SellerNotFoundException;
 import co.profiland.co.model.Review;
 import co.profiland.co.model.Seller;
@@ -30,9 +32,15 @@ public class SellerService {
     private final ContactRequestService contactRequestService = new ContactRequestService();
 
     public SellerService() {
-        persistence.initializeFile(XML_PATH, new ArrayList<Seller>());
-        persistence.initializeFile(DAT_PATH, new ArrayList<Seller>());
-        persistence.initializeFile(REVIEWS_PATH, new ArrayList<Review>());
+        try {
+            persistence.initializeFile(XML_PATH, new ArrayList<Seller>());
+            persistence.initializeFile(DAT_PATH, new ArrayList<Seller>());
+            persistence.initializeFile(REVIEWS_PATH, new ArrayList<Review>());
+        } catch (PersistenceException | BackupException e) {
+            ((Throwable) e).printStackTrace();
+            throw new RuntimeException("Failed to initialize files");
+        }
+        
         Utilities.setupLogger(LOG_PATH);
     }
 
@@ -86,8 +94,8 @@ public class SellerService {
 
                     persistence.serializeObject(REVIEWS_PATH, updatedSeller.getReviews());
 
-                    sellersXML.set(i, updatedSeller);
-                    serializeSellers("xml", sellersXML);
+                    sellersDat.set(i, updatedSeller);
+                    serializeSellers("dat", sellersDat);
                     //Log Requirement - Second Delivery
                     persistence.writeIntoLogger("Seller with ID " + updatedSeller.getId() + " updated its data",Level.FINE);
                     return updatedSeller;
@@ -115,6 +123,7 @@ public class SellerService {
             throw new SellerNotFoundException("Seller with id " + id + " not found");
         });
     }
+
 
     public CompletableFuture<Boolean> deleteSeller(String id) {
         return getAllSellersMerged()
@@ -184,11 +193,17 @@ public class SellerService {
     }
 
     private void serializeSellers(String format, List<Seller> sellers) {
-        if ("xml".equalsIgnoreCase(format)) {
-            persistence.serializeObject(XML_PATH, sellers);
-        } else {
-            persistence.serializeObject(DAT_PATH, sellers);
-        }
+         try {
+            if ("xml".equalsIgnoreCase(format)) {
+                persistence.serializeObject(XML_PATH, sellers);
+            } else {
+                persistence.serializeObject(DAT_PATH, sellers);
+            }
+        } catch (PersistenceException e) {
+            persistence.writeIntoLogger("Error saving seller models into the files", Level.SEVERE);
+            e.printStackTrace();
+
+        }  
     }
 
     public CompletableFuture<String> convertToJson(List<Seller> sellers) {

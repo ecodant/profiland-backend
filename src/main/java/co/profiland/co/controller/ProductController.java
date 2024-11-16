@@ -15,11 +15,9 @@ import java.util.concurrent.CompletableFuture;
 public class ProductController {
 
     private final ProductService productService;
-    private final SellerService sellerService;
 
     public ProductController(ProductService productService, SellerService sellerService) {
         this.productService = productService;
-        this.sellerService = sellerService;
     }
 
     // Save a Product
@@ -51,7 +49,6 @@ public class ProductController {
                 .exceptionally(ex -> ResponseEntity.internalServerError().build());
     }
 
-    // Delete Product by ID
     @DeleteMapping("/{id}")
     public CompletableFuture<ResponseEntity<? extends Object>> deleteProduct(@PathVariable String id) {
         return productService.deleteProduct(id)
@@ -61,7 +58,6 @@ public class ProductController {
                 .exceptionally(ex -> ResponseEntity.internalServerError().build());
     }
 
-    // Get All Products
     @GetMapping("/")
     public CompletableFuture<ResponseEntity<List<Product>>> getAllProducts() {
         return productService.getAllProducts()
@@ -69,7 +65,6 @@ public class ProductController {
                 .exceptionally(ex -> ResponseEntity.internalServerError().build());
     }
 
-    // Get Products by Name
     @GetMapping("/name/{name}")
     public CompletableFuture<ResponseEntity<? extends Object>> getProductsByName(@PathVariable String name) {
         return productService.findProductsByName(name)

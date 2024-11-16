@@ -9,6 +9,8 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import co.profiland.co.components.ThreadPoolManager;
+import co.profiland.co.exception.BackupException;
+import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.exception.RequestNotFoundException;
 import co.profiland.co.model.ContactRequest;
 import co.profiland.co.model.StateRequest;
@@ -27,9 +29,14 @@ public class ContactRequestService {
     private final Utilities persistence = Utilities.getInstance();
 
     public ContactRequestService() {
-        persistence.initializeFile(ON_HOLD_PATH, new ArrayList<ContactRequest>());
-        persistence.initializeFile(ACCEPTED_PATH, new ArrayList<ContactRequest>());
-        persistence.initializeFile(REJECTED_PATH, new ArrayList<ContactRequest>());
+        try {
+            persistence.initializeFile(ON_HOLD_PATH, new ArrayList<ContactRequest>());
+            persistence.initializeFile(ACCEPTED_PATH, new ArrayList<ContactRequest>());
+            persistence.initializeFile(REJECTED_PATH, new ArrayList<ContactRequest>());
+        } catch (PersistenceException | BackupException e) {
+            ((Throwable) e).printStackTrace();
+            throw new RuntimeException("Failed to initialize files");
+        }
         Utilities.setupLogger(LOG_PATH);
     }
 
@@ -91,7 +98,12 @@ public class ContactRequestService {
             }
     
             // Serialize all lists, regardless of whether they're empty or not
-            persistence.serializeObject(ON_HOLD_PATH, onHoldRequests);
+            try {
+                persistence.serializeObject(ON_HOLD_PATH, onHoldRequests);
+            } catch (PersistenceException e) {
+                persistence.writeIntoLogger("Error serializing on hold requests", Level.SEVERE);
+                throw new RuntimeException("Failed to serialize on hold requests", e);
+            }
             persistence.serializeObject(ACCEPTED_PATH, acceptedRequests);
             persistence.serializeObject(REJECTED_PATH, rejectRequets);
     
@@ -183,7 +195,11 @@ public class ContactRequestService {
                 for (int i = 0; i < onHoldRequests.size(); i++) {
                     if (onHoldRequests.get(i).getId().equals(request.getId())) {
                         onHoldRequests.set(i, request); 
-                        persistence.serializeObject(ON_HOLD_PATH, onHoldRequests);
+                        try {
+                            persistence.serializeObject(ON_HOLD_PATH, onHoldRequests);
+                        } catch (PersistenceException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
                 break;
@@ -199,9 +215,9 @@ public class ContactRequestService {
         List<ContactRequest> toList = getRequestsList(toPath);
 
         if (fromList.removeIf(r -> r.getId().equals(request.getId()))) {
-            persistence.serializeObject(fromPath, fromList);
+            serializeRequestsList(fromPath, fromList);
             toList.add(request);
-            persistence.serializeObject(toPath, toList);
+            serializeRequestsList(toPath, toList);
         } else {
             persistence.writeIntoLogger("Contact request not found in source list: " + request.getId(), Level.WARNING);
         }
@@ -239,7 +255,7 @@ public class ContactRequestService {
         boolean removed = requests.removeIf(r -> r.getId().equals(id));
 
         if (removed) {
-            persistence.serializeObject(path, requests);
+            serializeRequestsList(path, requests);
         }
         return removed;
     }
@@ -255,7 +271,16 @@ public class ContactRequestService {
         return new ArrayList<>();
     }
 
-    // Find requests by emisor ID
+    private void serializeRequestsList(String path, List<ContactRequest> requests) {
+        try {
+            persistence.serializeObject(path, requests);
+        } catch (PersistenceException e) {
+            persistence.writeIntoLogger("Error serializing requests list", Level.SEVERE);
+            e.printStackTrace();
+
+        }  
+    }
+    
     public CompletableFuture<List<ContactRequest>> findRequestsByEmisorId(String emisorId) {
         return getAllRequests().thenApply(requests -> 
             requests.stream()

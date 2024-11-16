@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 public class ReportService {
-    private static final String REPORTS_BASE_PATH = "C:/td/persistence/reports/";
+    private static final String REPORTS_BASE_PATH = "C:/td/persistence/files/reports/";
 
     private String createReportHeader(String title, String sellerName, String content) {
         StringBuilder reportContent = new StringBuilder();

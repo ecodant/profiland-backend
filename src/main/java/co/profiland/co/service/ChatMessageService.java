@@ -6,6 +6,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import co.profiland.co.components.ThreadPoolManager;
+import co.profiland.co.exception.BackupException;
+import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.model.ChatMessage;
 import co.profiland.co.utils.Utilities;
 
@@ -16,7 +18,7 @@ public class ChatMessageService {
     private final Utilities persistence;
     private final ThreadPoolManager threadPool;
 
-    public ChatMessageService(Utilities persistence) {
+    public ChatMessageService(Utilities persistence) throws PersistenceException, BackupException {
         this.persistence = persistence;
         this.threadPool = ThreadPoolManager.getInstance();
         persistence.initializeFile(XML_PATH, new ArrayList<ChatMessage>());

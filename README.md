@@ -6,8 +6,7 @@ Profiland is a social media application designed for users to share and sell art
 
 **Technologies:**
 
-- **Backend:** Java 21, Spring Boot
-- **Frontend:** 
+- Java 21, Spring Boot
 
 **Features:**
 
@@ -16,4 +15,4 @@ Profiland is a social media application designed for users to share and sell art
 - **Network Connections:** Connect with other users to build a network of potential clients.
 - **Messaging:** Send private messages to other users for discussions and negotiations.
 - **Notifications:** Receive notifications for new connections, messages, and interactions with your articles.
-- **Reputation System:** Track user reputation based on positive feedback, successful sales, and engagement.
+- **Reputation System:** Track user reputation based on positive feedback, successful sales.

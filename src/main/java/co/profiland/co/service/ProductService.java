@@ -9,6 +9,8 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import co.profiland.co.components.ThreadPoolManager;
+import co.profiland.co.exception.BackupException;
+import co.profiland.co.exception.PersistenceException;
 import co.profiland.co.exception.ProductNotFound;
 import co.profiland.co.model.Product;
 import co.profiland.co.model.State;
@@ -26,9 +28,14 @@ public class ProductService {
     private final ThreadPoolManager threadPool = ThreadPoolManager.getInstance();
     private final Utilities persistence = Utilities.getInstance();
     public ProductService() {
-        persistence.initializeFile(AVAILABLE_PATH, new ArrayList<Product>());
-        persistence.initializeFile(SOLD_PATH, new ArrayList<Product>());
-        persistence.initializeFile(PUBLISHED_PATH, new ArrayList<Product>());
+        try {
+            persistence.initializeFile(AVAILABLE_PATH, new ArrayList<Product>());
+            persistence.initializeFile(SOLD_PATH, new ArrayList<Product>());
+            persistence.initializeFile(PUBLISHED_PATH, new ArrayList<Product>());
+        } catch (PersistenceException | BackupException e) {
+            ((Throwable) e).printStackTrace();
+            throw new RuntimeException("Failed to initialize files");
+        }
         Utilities.setupLogger(LOG_PATH); 
     }
 
@@ -181,7 +188,7 @@ public CompletableFuture<Object> organizeAndSerializeProducts(List<Product> prod
                     if (availableProducts.get(i).getId().equals(product.getId())) {
                         // product.setId();
                         availableProducts.set(i, product); 
-                        persistence.serializeObject(AVAILABLE_PATH, availableProducts);
+                        serializeProducts(AVAILABLE_PATH, availableProducts);
                     }
                 }
                 
@@ -197,9 +204,9 @@ public CompletableFuture<Object> organizeAndSerializeProducts(List<Product> prod
         List<Product> toList = getProductsList(toPath);
 
         if (fromList.removeIf(p -> p.getId().equals(product.getId()))) {
-            persistence.serializeObject(fromPath, fromList);
+            serializeProducts(fromPath, fromList);
             toList.add(product);
-            persistence.serializeObject(toPath, toList);
+            serializeProducts(toPath, toList);
         } else {
             persistence.writeIntoLogger("Product not found in source list: " + product.getId(), Level.WARNING);
         }
@@ -237,12 +244,11 @@ public CompletableFuture<Object> organizeAndSerializeProducts(List<Product> prod
         boolean removed = products.removeIf(p -> p.getId().equals(id));
 
         if (removed) {
-            persistence.serializeObject(path, products);
+            serializeProducts(path, products);
         }
         return removed;
     }
 
-    // Get products from a given path
     @SuppressWarnings("unchecked")
     private List<Product> getProductsList(String path) {
         Object data;
@@ -263,5 +269,16 @@ public CompletableFuture<Object> organizeAndSerializeProducts(List<Product> prod
             return new ArrayList<>();
         });
     }
+
+    private void serializeProducts(String path, List<Product> products) {
+        try {
+            persistence.serializeObject(path, products);
+        } catch (PersistenceException e) {
+            persistence.writeIntoLogger("Error saving the products on the files", Level.SEVERE);
+            e.printStackTrace();
+
+        }  
+    }
+    
 
 }
