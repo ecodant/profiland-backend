@@ -23,7 +23,6 @@ public class ProductService {
     private final String AVAILABLE_PATH = XML_PATH + "/available_products.xml";
     private final String SOLD_PATH = XML_PATH + "/sold_products.xml";
     private final String PUBLISHED_PATH = XML_PATH + "/published_products.xml";
-    private final String LOG_PATH = "C:/td/persistence/log/Profiland_Log.log";
 
     private final ThreadPoolManager threadPool = ThreadPoolManager.getInstance();
     private final Utilities persistence = Utilities.getInstance();
@@ -36,7 +35,7 @@ public class ProductService {
             ((Throwable) e).printStackTrace();
             throw new RuntimeException("Failed to initialize files");
         }
-        Utilities.setupLogger(LOG_PATH); 
+        // Utilities.setupLogger(); 
     }
 
     

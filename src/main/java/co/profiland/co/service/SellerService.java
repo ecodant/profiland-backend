@@ -25,7 +25,6 @@ public class SellerService {
     private final String DAT_PATH ="C:/td/persistence/models/sellers/sellers.dat";
     private final String REVIEWS_PATH ="C:/td/persistence/models/reviews/reviews.xml";
 
-    private final String LOG_PATH ="C:/td/persistence/log/Profiland_Log.log";
     private final ThreadPoolManager threadPool = ThreadPoolManager.getInstance();
     private final Utilities persistence = Utilities.getInstance();
     private final ProductService productService = new ProductService();
@@ -41,7 +40,7 @@ public class SellerService {
             throw new RuntimeException("Failed to initialize files");
         }
         
-        Utilities.setupLogger(LOG_PATH);
+        // Utilities.setupLogger();
     }
 
     public CompletableFuture<Seller> saveSeller(Seller seller, String format) {

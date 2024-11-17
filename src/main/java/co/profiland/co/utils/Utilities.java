@@ -29,12 +29,14 @@ public class Utilities implements Serializable {
     private final ThreadPoolManager threadPool;
     private static FileHandler fileHandler;
     private static Utilities instance;
-       private static final String DEFAULT_BACKUP_PATH = "C:/td/persistence/backup/";
+    private static final String DEFAULT_BACKUP_PATH = "C:/td/persistence/backup/";
+    private static final String LOG_PATH ="C:/td/persistence/log/Profiland_Log.log";
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = 
         DateTimeFormatter.ofPattern("dd-MM-yyyy_HH_mm_ss");
 
     private Utilities() {
         this.threadPool = ThreadPoolManager.getInstance();
+        setupLogger();
     }
     
     public static Utilities getInstance() {
@@ -48,9 +50,17 @@ public class Utilities implements Serializable {
         return instance;
     }
 
-    public static boolean setupLogger(String logPath) {
+    public static boolean setupLogger() {
         try {
-            fileHandler = new FileHandler(logPath, true);
+            Path path = Paths.get(LOG_PATH);
+            Path parentDir = path.getParent();
+            if (!Files.exists(parentDir)) {
+                Files.createDirectories(parentDir); // Create directories if they do not exist
+            }
+            if (!Files.exists(path)) {
+                Files.createFile(path); // Create the log file if it does not exist
+            }
+            fileHandler = new FileHandler(LOG_PATH, true);
             fileHandler.setFormatter(new SimpleFormatter());
             logger.addHandler(fileHandler);
             logger.setLevel(Level.ALL);
@@ -72,10 +82,7 @@ public class Utilities implements Serializable {
             logger.log(level, msg);
             return true;
         } catch (LogException e) {
-            System.err.println("Logger error: " + e.getMessage());
-            return false;
-        } catch (SecurityException e) {
-            System.err.println("Security violation while writing to log: " + e.getMessage());
+            System.err.println(e.getMessage());
             return false;
         }
     }

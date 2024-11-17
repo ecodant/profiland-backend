@@ -24,7 +24,6 @@ public class SellerController {
 
     public SellerController(SellerService sellerService) {
         this.sellerService = sellerService;
-        Utilities.setupLogger("C:/td/persistence/log/Profiland_Log.log");
     }
 
     @PostMapping("/register")

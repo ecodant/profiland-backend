@@ -23,7 +23,6 @@ public class ContactRequestService {
     private final String ON_HOLD_PATH = XML_PATH + "/on_hold_requests.xml";
     private final String ACCEPTED_PATH = XML_PATH + "/accepted_requests.xml";
     private final String REJECTED_PATH = XML_PATH + "/rejected_requests.xml";
-    private final String LOG_PATH = "C:/td/persistence/log/Profiland_Log.log";
 
     private final ThreadPoolManager threadPool = ThreadPoolManager.getInstance();
     private final Utilities persistence = Utilities.getInstance();
@@ -37,7 +36,7 @@ public class ContactRequestService {
             ((Throwable) e).printStackTrace();
             throw new RuntimeException("Failed to initialize files");
         }
-        Utilities.setupLogger(LOG_PATH);
+        // Utilities.setupLogger();
     }
 
     // Save a contact request and log the operation
